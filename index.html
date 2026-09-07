@@ -215,7 +215,7 @@
   0 0 7px #4DA3FF,
   0 0 14px #006CFF;
   font-family: "Crimson Pro", Georgia, serif;
-  font-size: 1 rem;
+  font-size: 1rem;
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0.06em;
@@ -280,10 +280,13 @@
     }
 
     .intro-text p {
-      max-width: 680px;
+     max-width: 680px;
       color: var(--muted);
       font-family: "Crimson Pro", Georgia, "Times New Roman", serif;
       font-size: 1.1rem;
+      text-align: justify;
+      -webkit-hyphens: auto;
+      hyphens: auto;
     }
 
     .buttons {
@@ -395,6 +398,9 @@
         flex-direction: column;
         padding-top: 18px;
         padding-bottom: 18px;
+          .intro-text p {
+        text-align: left;
+      }
       }
 
       .nav-links {
@@ -535,7 +541,6 @@
         </p>
 
         
-        </p>
         <div class="buttons">
           <a class="button" href="research.html">
             Research

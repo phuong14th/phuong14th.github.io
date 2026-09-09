@@ -463,8 +463,8 @@
 
     function openLightbox(image, caption) {
       lightboxImage.src = image;
-      lightboxImage.alt = caption;
-      lightboxCaption.textContent = caption;
+      lightboxImage.alt = "Theater image";
+      lightboxCaption.innerHTML = caption;
       lightbox.classList.add("open");
       lightbox.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
@@ -485,7 +485,7 @@
 
       const caption = document.createElement("span");
       caption.className = "gallery-caption";
-      caption.textContent = item.caption;
+      caption.innerHTML = item.caption;
 
       thumbnail.appendChild(img);
       card.appendChild(thumbnail);

@@ -400,45 +400,7 @@
     <p class="page-label">Spoilers</p>
     <h1>Life in Japan</h1>
 
-    <div class="gallery-grid">
-
-      <button
-        class="gallery-card"
-        data-title="Iiyama line, 3/2025"
-        data-image="../assets/life-in-japan/Iiyama_line.jpg"
-        type="button"
-      >
-        <div class="gallery-thumbnail">
-          <img
-            src="../assets/life-in-japan/Iiyama_line.jpg"
-            alt="Iiyama line"
-          >
-        </div>
-
-        <span class="gallery-caption">
-          Iiyama line, 3/2025
-        </span>
-      </button>
-
-      <button
-        class="gallery-card"
-        data-title="Togakushi Jinja, 12/2026"
-        data-image="../assets/life-in-japan/Togakushi_Jinja.jpg"
-        type="button"
-      >
-        <div class="gallery-thumbnail">
-          <img
-            src="../assets/life-in-japan/Togakushi_Jinja.jpg"
-            alt="Togakushi Jinja"
-          >
-        </div>
-
-        <span class="gallery-caption">
-          Togakushi Jinja, 12/2025
-        </span>
-      </button>
-
-    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </main>
 
   <footer>
@@ -481,21 +443,60 @@
     document.getElementById("year").textContent =
       new Date().getFullYear();
 
+    /*
+      ADD NEW PHOTOS HERE ONLY.
+      Upload the image to assets/life-in-japan/, then add one line below.
+    */
+    const galleryItems = [
+      { image: "../assets/life-in-japan/Iiyama_line.jpg", caption: "Iiyama line, 3/2025" },
+      { image: "../assets/life-in-japan/Togakushi_Jinja.jpg", caption: "Togakushi Jinja, 12/2025" },
+    ];
+
+    const galleryGrid = document.getElementById("gallery-grid");
     const lightbox = document.getElementById("lightbox");
     const lightboxImage = document.getElementById("lightbox-image");
     const lightboxCaption = document.getElementById("lightbox-caption");
     const closeButton = document.getElementById("lightbox-close");
 
-    document.querySelectorAll(".gallery-card").forEach(card => {
-      card.addEventListener("click", () => {
-        lightboxImage.src = card.dataset.image;
-        lightboxImage.alt = card.dataset.title;
-        lightboxCaption.textContent = card.dataset.title;
+    function openLightbox(image, caption) {
+      lightboxImage.src = image;
+      lightboxImage.alt = caption;
+      lightboxCaption.textContent = caption;
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
 
-        lightbox.classList.add("open");
-        lightbox.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
+    function makeGalleryCard(item) {
+      const card = document.createElement("button");
+      card.className = "gallery-card";
+      card.type = "button";
+
+      const thumbnail = document.createElement("div");
+      thumbnail.className = "gallery-thumbnail";
+
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.caption;
+      img.loading = "lazy";
+
+      const caption = document.createElement("span");
+      caption.className = "gallery-caption";
+      caption.textContent = item.caption;
+
+      thumbnail.appendChild(img);
+      card.appendChild(thumbnail);
+      card.appendChild(caption);
+
+      card.addEventListener("click", () => {
+        openLightbox(item.image, item.caption);
       });
+
+      return card;
+    }
+
+    galleryItems.forEach(item => {
+      galleryGrid.appendChild(makeGalleryCard(item));
     });
 
     function closeLightbox() {

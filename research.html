@@ -53,7 +53,7 @@
       color: var(--text);
       font-family: "Crimson Pro", Georgia, "Times New Roman", serif;
       font-size: 20px;
-      line-height: 1.7;
+      line-height: 1.75;
       transition: background-color 0.25s, color 0.25s;
     }
 
@@ -169,6 +169,10 @@
       cursor: pointer;
     }
 
+    .theme-toggle:hover {
+      border-color: var(--text);
+    }
+
     main {
       max-width: 1000px;
       margin: auto;
@@ -193,11 +197,12 @@
     }
 
     .research-card {
-      margin-bottom: 34px;
-      padding: 48px 54px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      margin: 0;
+      padding: 46px 0;
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
     }
 
     .research-card h2 {
@@ -338,7 +343,7 @@
       }
 
       .research-card {
-        padding: 34px 26px;
+        padding: 38px 0;
       }
     }
   </style>

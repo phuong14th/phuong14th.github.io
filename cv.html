@@ -53,7 +53,7 @@
       color: var(--text);
       font-family: "Crimson Pro", Georgia, "Times New Roman", serif;
       font-size: 20px;
-      line-height: 1.7;
+      line-height: 1.75;
       transition: background-color 0.25s, color 0.25s;
     }
 
@@ -217,11 +217,12 @@
     }
 
     .cv-card {
-      margin-bottom: 34px;
-      padding: 48px 54px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      margin: 0;
+      padding: 46px 0;
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
     }
 
     .cv-card h2 {
@@ -250,14 +251,10 @@
 
     .publication + .publication {
       margin-top: 28px;
-      padding-top: 28px;
-      border-top: 1px solid var(--border);
     }
 
     .research-group + .research-group {
       margin-top: 38px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
     }
 
     .cv-subsection {
@@ -303,8 +300,6 @@
 
     .cv-entry + .cv-entry {
       margin-top: 32px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
     }
 
     .entry-date {
@@ -383,7 +378,7 @@
       }
 
       .cv-card {
-        padding: 34px 26px;
+        padding: 34px 0;
       }
 
       .cv-entry {

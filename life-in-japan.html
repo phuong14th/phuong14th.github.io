@@ -112,8 +112,10 @@
     }
 
     .nav-links > a:hover,
-    summary:hover {
-      border-bottom: 1px solid var(--text);
+    .nav-links > a.active,
+    summary:hover,
+    summary.active {
+    border-bottom: 1px solid var(--text);
     }
 
     details {
@@ -377,7 +379,7 @@
         </details>
 
         <details>
-          <summary>Spoilers</summary>
+          <summary class="active">Spoilers</summary>
           <div class="dropdown">
             <a href="bookshelf.html">Bookshelf</a>
             <a href="theater.html">Theater</a>

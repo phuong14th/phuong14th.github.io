@@ -836,34 +836,51 @@
     }
 
 
-    .profile-link.scholar img {
-
-      width: 38px;
-
-      height: 38px;
-
-      border-radius: 50%;
-
-    }
+    .profile-link:hover {
+  transform: translateY(-3px);
+  opacity: 0.8;
+}
 
 
-    .profile-link.orcid img {
+/* Google Scholar + ORCID */
 
-      width: 38px;
+.profile-link.scholar img,
+.profile-link.orcid img {
+  width: 38px;
+  height: 38px;
+}
 
-      height: 38px;
 
-    }
+/* Make ORCID perfectly round */
+
+.profile-link.orcid {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.profile-link.orcid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 
-    .profile-link.github img {
+/* GitHub */
 
-      width: 35px;
+.profile-link.github img {
+  width: 35px;
+  height: 35px;
+}
 
-      height: 35px;
 
-    }
+/* Make black GitHub logo visible in dark mode */
 
+html[data-theme="dark"] .profile-link.github img {
+  filter: invert(1);
+}
 
     html[data-theme="dark"]
     .profile-link.github img {

@@ -25,21 +25,16 @@
     rel="stylesheet"
   >
 
-
   <script>
     try {
-
       const savedTheme =
         localStorage.getItem("theme") || "dark";
 
       document.documentElement.dataset.theme =
         savedTheme;
-
     } catch (error) {
-
       document.documentElement.dataset.theme =
         "dark";
-
     }
   </script>
 
@@ -51,7 +46,6 @@
     ========================= */
 
     :root {
-
       --background: #000000;
       --surface: #0c0c0c;
       --text: #ffffff;
@@ -63,18 +57,15 @@
 
       --hero-overlay-end:
         rgba(0, 0, 0, 0.55);
-
     }
 
 
     html[data-theme="light"] {
-
       --background: #ffffff;
       --surface: #f5f5f5;
       --text: #111111;
       --muted: #555555;
       --border: #dddddd;
-
     }
 
 
@@ -84,23 +75,16 @@
 
 
     html {
-
       scroll-behavior: smooth;
-
       font-size: 16px;
-
     }
 
 
     body {
-
       margin: 0;
 
-      background:
-        var(--background);
-
-      color:
-        var(--text);
+      background: var(--background);
+      color: var(--text);
 
       font-family:
         "Crimson Pro",
@@ -109,13 +93,11 @@
         serif;
 
       font-size: 20px;
-
       line-height: 1.75;
 
       transition:
         background-color 0.25s,
         color 0.25s;
-
     }
 
 
@@ -124,12 +106,10 @@
     .eyebrow,
     .button,
     .theme-toggle {
-
       font-family:
         "Inter",
         Arial,
         sans-serif;
-
     }
 
 
@@ -144,11 +124,8 @@
     ========================= */
 
     header {
-
       position: sticky;
-
       top: 0;
-
       z-index: 100;
 
       background:
@@ -156,69 +133,50 @@
 
       border-bottom:
         1px solid var(--border);
-
     }
 
 
     nav {
-
       max-width: 1400px;
-
       min-height: 76px;
 
       margin: auto;
-
-      padding:
-        0 30px;
+      padding: 0 30px;
 
       display: flex;
-
       align-items: center;
-
-      justify-content:
-        space-between;
+      justify-content: space-between;
 
       gap: 30px;
-
     }
 
 
     .site-name {
-
       font-family:
         "Inter",
         Arial,
         sans-serif;
 
       font-size: 1rem;
-
       font-weight: 600;
-
       letter-spacing: 0.04em;
 
       text-decoration: none;
-
       white-space: nowrap;
-
     }
 
 
     .nav-links {
-
       display: flex;
-
       align-items: center;
 
       gap: 30px;
-
     }
 
 
     .nav-links > a,
     summary {
-
-      padding:
-        8px 0;
+      padding: 8px 0;
 
       color:
         var(--text);
@@ -229,64 +187,49 @@
         sans-serif;
 
       font-size: 0.85rem;
-
       font-weight: 500;
-
       letter-spacing: 0.06em;
 
       text-decoration: none;
 
       cursor: pointer;
-
     }
 
 
     .nav-links > a:hover,
     .nav-links > a.active,
     summary:hover {
-
       border-bottom:
         1px solid var(--text);
-
     }
 
 
     details {
-
       position: relative;
-
     }
 
 
     summary {
-
       list-style: none;
-
     }
 
 
     summary::-webkit-details-marker {
-
       display: none;
-
     }
 
 
     summary::after {
-
       margin-left: 7px;
 
       content: "⌄";
-
     }
 
 
     .dropdown {
-
       position: absolute;
 
       top: 42px;
-
       left: 0;
 
       min-width: 190px;
@@ -302,12 +245,10 @@
       box-shadow:
         0 12px 30px
         rgba(0, 0, 0, 0.18);
-
     }
 
 
     .dropdown a {
-
       display: block;
 
       padding:
@@ -322,30 +263,23 @@
         sans-serif;
 
       font-size: 0.85rem;
-
       font-weight: 500;
-
       letter-spacing: 0.02em;
 
       text-decoration: none;
 
       white-space: nowrap;
-
     }
 
 
     .dropdown a:hover {
-
       background:
         var(--surface);
-
     }
 
 
     .theme-toggle {
-
       width: 36px;
-
       height: 36px;
 
       border:
@@ -362,15 +296,12 @@
       font-size: 1.1rem;
 
       cursor: pointer;
-
     }
 
 
     .theme-toggle:hover {
-
       border-color:
         var(--text);
-
     }
 
 
@@ -380,26 +311,22 @@
     ========================= */
 
     .hero {
-
       min-height: 480px;
 
       padding:
         70px 30px;
 
       display: flex;
-
       align-items: center;
 
       background-color:
         #000000;
 
       background-image:
-
         linear-gradient(
           var(--hero-overlay-start),
           var(--hero-overlay-end)
         ),
-
         url("assets/cover.jpg");
 
       background-position:
@@ -410,23 +337,18 @@
 
       color:
         #ffffff;
-
     }
 
 
     .hero-content {
-
       width: 100%;
-
       max-width: 1000px;
 
       margin: auto;
-
     }
 
 
     .eyebrow {
-
       margin:
         0 0 16px;
 
@@ -444,20 +366,16 @@
         serif;
 
       font-size: 1rem;
-
       font-style: italic;
-
       font-weight: 400;
 
       letter-spacing: 0.06em;
 
       text-transform: none;
-
     }
 
 
     h1 {
-
       max-width: 700px;
 
       margin: 0;
@@ -478,7 +396,6 @@
       font-weight: 400;
 
       line-height: 0.95;
-
     }
 
 
@@ -488,7 +405,6 @@
     ========================= */
 
     .introduction {
-
       max-width: 1000px;
 
       margin: auto;
@@ -504,16 +420,13 @@
       gap: 80px;
 
       align-items: center;
-
     }
 
 
     .profile {
-
       position: relative;
 
       width: 230px;
-
       height: 230px;
 
       overflow: hidden;
@@ -529,12 +442,10 @@
       display: grid;
 
       place-items: center;
-
     }
 
 
     .profile-placeholder {
-
       font-family:
         "Crimson Pro",
         Georgia,
@@ -542,36 +453,29 @@
         serif;
 
       font-size: 3rem;
-
     }
 
 
     .profile-photo {
-
       position: absolute;
 
       width: 100%;
-
       height: 100%;
 
       object-fit: cover;
-
     }
 
 
     .intro-text {
-
       border-top:
         1px solid var(--border);
 
       padding-top:
         32px;
-
     }
 
 
     h2 {
-
       margin:
         0 0 24px;
 
@@ -584,12 +488,10 @@
       font-size: 2rem;
 
       font-weight: 500;
-
     }
 
 
     .intro-text p {
-
       max-width: 680px;
 
       color:
@@ -610,7 +512,6 @@
 
       hyphens:
         auto;
-
     }
 
 
@@ -620,7 +521,6 @@
     ========================= */
 
     .buttons {
-
       margin-top: 32px;
 
       display: flex;
@@ -628,12 +528,10 @@
       flex-wrap: wrap;
 
       gap: 14px;
-
     }
 
 
     .button {
-
       padding:
         11px 22px;
 
@@ -652,18 +550,15 @@
       text-decoration: none;
 
       text-transform: uppercase;
-
     }
 
 
     .button:hover {
-
       background:
         var(--text);
 
       color:
         var(--background);
-
     }
 
 
@@ -673,29 +568,24 @@
     ========================= */
 
     .contact {
-
       max-width: 1000px;
 
       margin: auto;
 
       padding:
         0 30px 90px;
-
     }
 
 
     .contact-inner {
-
       padding-top: 46px;
 
       border-top:
         1px solid var(--border);
-
     }
 
 
     .contact-grid {
-
       display: grid;
 
       grid-template-columns:
@@ -708,12 +598,10 @@
         28px 70px;
 
       max-width: 760px;
-
     }
 
 
     .contact-label {
-
       margin:
         0 0 4px;
 
@@ -732,36 +620,29 @@
       letter-spacing: 0.08em;
 
       text-transform: uppercase;
-
     }
 
 
     .contact-value {
-
       margin: 0;
 
       font-size:
         1.05rem;
-
     }
 
 
     .contact-value a {
-
       text-decoration-color:
         var(--border);
 
       text-underline-offset:
         5px;
-
     }
 
 
     .contact-value a:hover {
-
       text-decoration-color:
         var(--text);
-
     }
 
 
@@ -771,7 +652,6 @@
     ========================= */
 
     .profile-links {
-
       display: flex;
 
       align-items: center;
@@ -781,20 +661,16 @@
       gap: 18px;
 
       margin-top: 34px;
-
     }
 
 
     .profile-link {
-
       width: 42px;
-
       height: 42px;
 
       display: flex;
 
       align-items: center;
-
       justify-content: center;
 
       padding: 0;
@@ -809,85 +685,92 @@
       transition:
         transform 0.2s ease,
         opacity 0.2s ease;
-
-    }
-
-
-    .profile-link img {
-
-      display: block;
-
-      width: 36px;
-
-      height: 36px;
-
-      object-fit: contain;
-
     }
 
 
     .profile-link:hover {
-
       transform:
         translateY(-3px);
 
       opacity: 0.8;
-
     }
 
 
-    .profile-link:hover {
-  transform: translateY(-3px);
-  opacity: 0.8;
-}
+
+    /* -------------------------
+       Google Scholar
+    ------------------------- */
+
+    .profile-link.scholar {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 50%;
+
+      overflow: hidden;
+    }
 
 
-/* Google Scholar + ORCID */
+    .profile-link.scholar img {
+      display: block;
 
-.profile-link.scholar img,
-.profile-link.orcid img {
-  width: 38px;
-  height: 38px;
-}
+      width: 46px;
+      height: 46px;
 
+      max-width: none;
 
-/* Make ORCID perfectly round */
+      object-fit: contain;
 
-.profile-link.orcid {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.profile-link.orcid img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
+      flex-shrink: 0;
+    }
 
 
-/* GitHub */
 
-.profile-link.github img {
-  width: 35px;
-  height: 35px;
-}
+    /* -------------------------
+       ORCID
+    ------------------------- */
+
+    .profile-link.orcid {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 50%;
+
+      overflow: hidden;
+    }
 
 
-/* Make black GitHub logo visible in dark mode */
+    .profile-link.orcid img {
+      display: block;
 
-html[data-theme="dark"] .profile-link.github img {
-  filter: invert(1);
-}
+      width: 38px;
+      height: 38px;
+
+      object-fit: cover;
+
+      border-radius: 50%;
+    }
+
+
+
+    /* -------------------------
+       GitHub
+    ------------------------- */
+
+    .profile-link.github img {
+      display: block;
+
+      width: 35px;
+      height: 35px;
+
+      object-fit: contain;
+    }
+
 
     html[data-theme="dark"]
     .profile-link.github img {
-
       filter:
         invert(1);
-
     }
 
 
@@ -897,7 +780,6 @@ html[data-theme="dark"] .profile-link.github img {
     ========================= */
 
     footer {
-
       max-width: 1000px;
 
       margin: auto;
@@ -911,7 +793,6 @@ html[data-theme="dark"] .profile-link.github img {
         var(--muted);
 
       font-size: 0.85rem;
-
     }
 
 
@@ -923,7 +804,6 @@ html[data-theme="dark"] .profile-link.github img {
     @media (max-width: 850px) {
 
       nav {
-
         align-items:
           flex-start;
 
@@ -935,12 +815,10 @@ html[data-theme="dark"] .profile-link.github img {
 
         padding-bottom:
           18px;
-
       }
 
 
       .nav-links {
-
         width: 100%;
 
         flex-wrap:
@@ -948,64 +826,51 @@ html[data-theme="dark"] .profile-link.github img {
 
         gap:
           10px 22px;
-
       }
 
 
       .dropdown {
-
         position:
           static;
 
         margin-top:
           5px;
-
       }
 
 
       .hero {
-
         min-height:
           390px;
-
       }
 
 
       .introduction {
-
         grid-template-columns:
           1fr;
 
         gap:
           45px;
-
       }
 
 
       .intro-text p {
-
         text-align:
           left;
-
       }
 
 
       .contact-grid {
-
         grid-template-columns:
           1fr;
-
       }
 
 
       .profile {
-
         width:
           180px;
 
         height:
           180px;
-
       }
 
     }
@@ -1172,7 +1037,9 @@ html[data-theme="dark"] .profile-link.github img {
 
 
 
-    <!-- INTRODUCTION -->
+    <!-- =========================
+         INTRODUCTION
+    ========================= -->
 
     <section class="introduction">
 

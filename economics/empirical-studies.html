@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Empirical Studies | Le Ha Phuong</title>
+
+  <meta
+    name="description"
+    content="Summaries of empirical Economics and Econometrics papers"
+  >
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  >
+
+  <script>
+    try {
+      const savedTheme =
+        localStorage.getItem("theme") || "dark";
+
+      document.documentElement.dataset.theme =
+        savedTheme;
+    } catch (error) {
+      document.documentElement.dataset.theme =
+        "dark";
+    }
+  </script>
+
+
+  <style>
+
+    /* =========================
+       THEME
+    ========================= */
+
+    :root {
+      --background: #000000;
+      --surface: #0c0c0c;
+      --text: #ffffff;
+      --muted: #bdbdbd;
+      --border: #333333;
+
+      --hover-border: #6faeff;
+      --hover-glow: rgba(111, 174, 255, 0.16);
+      --hover-glow-soft: rgba(111, 174, 255, 0.06);
+    }
+
+
+    html[data-theme="light"] {
+      --background: #ffffff;
+      --surface: #f5f5f5;
+      --text: #111111;
+      --muted: #555555;
+      --border: #dddddd;
+
+      --hover-border: #4d86c6;
+      --hover-glow: rgba(77, 134, 198, 0.13);
+      --hover-glow-soft: rgba(77, 134, 198, 0.05);
+    }
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    html {
+      font-size: 16px;
+    }
+
+
+    body {
+      margin: 0;
+
+      background:
+        var(--background);
+
+      color:
+        var(--text);
+
+      font-family:
+        "Crimson Pro",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size: 20px;
+      line-height: 1.75;
+
+      transition:
+        background-color 0.25s,
+        color 0.25s;
+    }
+
+
+    a {
+      color: inherit;
+    }
+
+
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+
+      background:
+        var(--background);
+
+      border-bottom:
+        1px solid var(--border);
+    }
+
+
+    nav {
+      max-width: 1400px;
+      min-height: 76px;
+
+      margin: auto;
+      padding: 0 30px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+    }
+
+
+    .site-name {
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+
+      gap: 30px;
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+    }
+
+
+    .nav-links > a,
+    summary {
+      padding: 8px 0;
+
+      color:
+        var(--text);
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+
+      text-decoration: none;
+
+      cursor: pointer;
+    }
+
+
+    .nav-links > a:hover,
+    .nav-links > a.active,
+    summary:hover,
+    summary.active {
+      border-bottom:
+        1px solid var(--text);
+    }
+
+
+    details {
+      position: relative;
+    }
+
+
+    summary {
+      list-style: none;
+    }
+
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+
+    summary::after {
+      margin-left: 7px;
+      content: "⌄";
+    }
+
+
+    .dropdown {
+      position: absolute;
+
+      top: 42px;
+      left: 0;
+
+      min-width: 190px;
+
+      padding: 9px;
+
+      background:
+        var(--background);
+
+      border:
+        1px solid var(--border);
+
+      box-shadow:
+        0 12px 30px
+        rgba(0, 0, 0, 0.18);
+    }
+
+
+    .dropdown a {
+      display: block;
+
+      padding:
+        10px 12px;
+
+      color:
+        var(--text);
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+
+      text-decoration: none;
+
+      white-space: nowrap;
+    }
+
+
+    .dropdown a:hover {
+      background:
+        var(--surface);
+    }
+
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+
+      border:
+        1px solid var(--border);
+
+      border-radius: 5px;
+
+      background:
+        transparent;
+
+      color:
+        var(--text);
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size: 1.1rem;
+
+      cursor: pointer;
+    }
+
+
+    .theme-toggle:hover {
+      border-color:
+        var(--text);
+    }
+
+
+
+    /* =========================
+       PAGE
+    ========================= */
+
+    main {
+      max-width: 1000px;
+
+      margin: auto;
+
+      padding:
+        70px 30px
+        100px;
+    }
+
+
+    .page-label {
+      margin:
+        0 0 12px;
+
+      color:
+        var(--muted);
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size: 0.78rem;
+      font-weight: 600;
+
+      letter-spacing:
+        0.18em;
+
+      text-transform:
+        uppercase;
+    }
+
+
+    h1 {
+      margin:
+        0 0 24px;
+
+      font-family:
+        "Crimson Pro",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size:
+        clamp(
+          3rem,
+          7vw,
+          4.5rem
+        );
+
+      font-weight: 400;
+
+      line-height: 1;
+    }
+
+
+    .page-intro {
+      max-width: 720px;
+
+      margin:
+        0 0 54px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        1.15rem;
+
+      line-height:
+        1.7;
+    }
+
+
+
+    /* =========================
+       STUDY GRID
+    ========================= */
+
+    .study-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+
+      gap: 20px;
+    }
+
+
+
+    /* =========================
+       STUDY CARD
+    ========================= */
+
+    .study-card {
+      position: relative;
+
+      display: block;
+
+      min-height: 240px;
+
+      padding:
+        30px 32px;
+
+      overflow: hidden;
+
+      background:
+        var(--surface);
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        12px;
+
+      color:
+        var(--text);
+
+      text-decoration:
+        none;
+
+      transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+
+    .study-card::before {
+      content: "";
+
+      position:
+        absolute;
+
+      inset: 0;
+
+      pointer-events:
+        none;
+
+      opacity: 0;
+
+      background:
+        radial-gradient(
+          circle at 15% 0%,
+          var(--hover-glow),
+          transparent 38%
+        );
+
+      transition:
+        opacity 0.25s ease;
+    }
+
+
+    .study-card:hover {
+      transform:
+        translateY(-3px);
+
+      border-color:
+        var(--hover-border);
+
+      box-shadow:
+        0 0 0 1px var(--hover-glow),
+        0 10px 30px var(--hover-glow-soft);
+    }
+
+
+    .study-card:hover::before {
+      opacity: 1;
+    }
+
+
+    .study-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+
+
+    /* =========================
+       TYPE BADGE
+    ========================= */
+
+    .study-type {
+      display: inline-block;
+
+      margin:
+        0 0 22px;
+
+      padding:
+        5px 10px;
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        5px;
+
+      color:
+        var(--muted);
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        600;
+
+      letter-spacing:
+        0.10em;
+
+      text-transform:
+        uppercase;
+    }
+
+
+
+    /* =========================
+       PAPER INFORMATION
+    ========================= */
+
+    .study-title {
+      margin:
+        0 0 14px;
+
+      font-family:
+        "Crimson Pro",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size:
+        1.28rem;
+
+      font-weight:
+        500;
+
+      line-height:
+        1.35;
+    }
+
+
+    .study-authors {
+      margin:
+        0 0 12px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        1rem;
+
+      line-height:
+        1.5;
+    }
+
+
+    .study-publication {
+      margin: 0;
+
+      color:
+        var(--muted);
+
+      font-size:
+        1rem;
+
+      font-style:
+        italic;
+
+      line-height:
+        1.5;
+    }
+
+
+    .study-year {
+      font-style:
+        normal;
+    }
+
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      max-width:
+        1000px;
+
+      margin:
+        auto;
+
+      padding:
+        30px;
+
+      border-top:
+        1px solid var(--border);
+
+      color:
+        var(--muted);
+
+      font-size:
+        0.85rem;
+    }
+
+
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 850px) {
+
+      nav {
+        align-items:
+          flex-start;
+
+        flex-direction:
+          column;
+
+        padding-top:
+          18px;
+
+        padding-bottom:
+          18px;
+      }
+
+
+      .nav-links {
+        width: 100%;
+
+        flex-wrap:
+          wrap;
+
+        gap:
+          10px 22px;
+      }
+
+
+      .dropdown {
+        position:
+          static;
+
+        margin-top:
+          5px;
+      }
+
+
+      main {
+        padding-top:
+          50px;
+      }
+
+    }
+
+
+    @media (max-width: 700px) {
+
+      .study-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .study-card {
+        min-height:
+          auto;
+
+        padding:
+          26px 24px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+  <!-- =========================
+       NAVIGATION
+  ========================= -->
+
+  <header>
+
+    <nav>
+
+      <a
+        class="site-name"
+        href="../index.html"
+      >
+        Le Ha Phuong
+      </a>
+
+
+      <div class="nav-links">
+
+        <a href="../index.html">
+          Home
+        </a>
+
+
+        <a href="../research.html">
+          Research
+        </a>
+
+
+        <a href="../cv.html">
+          CV
+        </a>
+
+
+
+        <details>
+
+          <summary class="active">
+            Economics
+          </summary>
+
+
+          <div class="dropdown">
+
+            <a href="empirical-studies.html">
+              Empirical studies
+            </a>
+
+
+            <a href="notes.html">
+              Notes
+            </a>
+
+
+            <a href="useful-sources.html">
+              Useful sources
+            </a>
+
+          </div>
+
+        </details>
+
+
+
+        <details>
+
+          <summary>
+            Spoilers
+          </summary>
+
+
+          <div class="dropdown">
+
+            <a href="../spoilers/bookshelf.html">
+              Bookshelf
+            </a>
+
+
+            <a href="../spoilers/theater.html">
+              Theater
+            </a>
+
+
+            <a href="../spoilers/life-in-japan.html">
+              Life in Japan
+            </a>
+
+          </div>
+
+        </details>
+
+
+
+        <button
+          class="theme-toggle"
+          id="theme-toggle"
+          type="button"
+          aria-label="Switch colour theme"
+          title="Switch colour theme"
+        >
+          ☀
+        </button>
+
+      </div>
+
+    </nav>
+
+  </header>
+
+
+
+  <!-- =========================
+       CONTENT
+  ========================= -->
+
+  <main>
+
+
+    <p class="page-label">
+      Self Study
+    </p>
+
+
+    <h1>
+      Empirical Studies
+    </h1>
+
+
+    <p class="page-intro">
+      Summaries of empirical Economics and Econometrics papers.
+      Click on a paper to read my notes.
+    </p>
+
+
+
+    <!-- =========================
+         PAPER GRID
+    ========================= -->
+
+    <div class="study-grid">
+
+
+
+      <!-- =========================
+           PAPER 1
+      ========================= -->
+
+      <a
+        class="study-card"
+        href="empirical-studies/us-china-trade-war-global-reallocations.html"
+      >
+
+        <span class="study-type">
+          Journal Paper
+        </span>
+
+
+        <h2 class="study-title">
+          The US-China Trade War and Global Reallocations
+        </h2>
+
+
+        <p class="study-authors">
+          Pablo Fajgelbaum,
+          Pinelopi Goldberg,
+          Patrick Kennedy,
+          Amit Khandelwal,
+          and Daria Taglioni
+        </p>
+
+
+        <p class="study-publication">
+          American Economic Review: Insights
+          <span class="study-year">
+            · 2024
+          </span>
+        </p>
+
+      </a>
+
+
+
+      <!-- =========================
+           PAPER 2
+      ========================= -->
+
+      <a
+        class="study-card"
+        href="empirical-studies/return-to-protectionism.html"
+      >
+
+        <span class="study-type">
+          Journal Paper
+        </span>
+
+
+        <h2 class="study-title">
+          The Return to Protectionism
+        </h2>
+
+
+        <p class="study-authors">
+          Pablo D. Fajgelbaum,
+          Pinelopi K. Goldberg,
+          Patrick J. Kennedy,
+          and Amit K. Khandelwal
+        </p>
+
+
+        <p class="study-publication">
+          The Quarterly Journal of Economics
+        </p>
+
+      </a>
+
+
+
+      <!-- =========================
+           ADD NEW PAPER HERE
+      ========================= -->
+
+      <!--
+
+      <a
+        class="study-card"
+        href="empirical-studies/file-name.html"
+      >
+
+        <span class="study-type">
+          Working Paper
+        </span>
+
+        <h2 class="study-title">
+          Paper Title
+        </h2>
+
+        <p class="study-authors">
+          Author One, Author Two
+        </p>
+
+        <p class="study-publication">
+          NBER Working Paper
+          <span class="study-year">
+            · 2026
+          </span>
+        </p>
+
+      </a>
+
+      -->
+
+
+    </div>
+
+  </main>
+
+
+
+  <!-- =========================
+       FOOTER
+  ========================= -->
+
+  <footer>
+    ©
+    <span id="year"></span>
+    Le Ha Phuong
+  </footer>
+
+
+
+  <!-- =========================
+       JAVASCRIPT
+  ========================= -->
+
+  <script>
+
+    const page =
+      document.documentElement;
+
+
+    const toggle =
+      document.getElementById(
+        "theme-toggle"
+      );
+
+
+    function updateThemeIcon() {
+
+      toggle.textContent =
+        page.dataset.theme === "dark"
+          ? "☀"
+          : "☾";
+
+    }
+
+
+    updateThemeIcon();
+
+
+    toggle.addEventListener(
+      "click",
+      function () {
+
+        const newTheme =
+          page.dataset.theme === "dark"
+            ? "light"
+            : "dark";
+
+
+        page.dataset.theme =
+          newTheme;
+
+
+        localStorage.setItem(
+          "theme",
+          newTheme
+        );
+
+
+        updateThemeIcon();
+
+      }
+    );
+
+
+    document.getElementById(
+      "year"
+    ).textContent =
+      new Date().getFullYear();
+
+  </script>
+
+
+</body>
+
+</html>

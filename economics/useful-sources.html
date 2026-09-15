@@ -6,15 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Useful Sources | Le Ha Phuong</title>
+
   <meta
     name="description"
     content="Some useful links and other stuff"
-  >
-
-
-  <meta
-    name="description"
-    content="Useful economics data sources, online courses, seminars, websites, and blogs"
   >
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +49,7 @@
       --border: #333333;
     }
 
+
     html[data-theme="light"] {
       --background: #ffffff;
       --surface: #f5f5f5;
@@ -62,19 +58,25 @@
       --border: #dddddd;
     }
 
+
     * {
       box-sizing: border-box;
     }
+
 
     html {
       font-size: 16px;
     }
 
+
     body {
       margin: 0;
 
-      background: var(--background);
-      color: var(--text);
+      background:
+        var(--background);
+
+      color:
+        var(--text);
 
       font-family:
         "Crimson Pro",
@@ -90,9 +92,11 @@
         color 0.25s;
     }
 
+
     a {
       color: inherit;
     }
+
 
 
     /* =========================
@@ -104,11 +108,13 @@
       top: 0;
       z-index: 100;
 
-      background: var(--background);
+      background:
+        var(--background);
 
       border-bottom:
         1px solid var(--border);
     }
+
 
     nav {
       max-width: 1400px;
@@ -124,8 +130,13 @@
       gap: 30px;
     }
 
+
     .site-name {
-      font-family: "Inter", Arial, sans-serif;
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
       font-size: 1rem;
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -134,29 +145,41 @@
       white-space: nowrap;
     }
 
+
     .nav-links {
       display: flex;
       align-items: center;
 
       gap: 30px;
 
-      font-family: "Inter", Arial, sans-serif;
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
     }
+
 
     .nav-links > a,
     summary {
       padding: 8px 0;
 
-      color: var(--text);
+      color:
+        var(--text);
 
-      font-family: "Inter", Arial, sans-serif;
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
       font-size: 0.85rem;
       font-weight: 500;
       letter-spacing: 0.06em;
 
       text-decoration: none;
+
       cursor: pointer;
     }
+
 
     .nav-links > a:hover,
     .nav-links > a.active,
@@ -166,22 +189,27 @@
         1px solid var(--text);
     }
 
+
     details {
       position: relative;
     }
+
 
     summary {
       list-style: none;
     }
 
+
     summary::-webkit-details-marker {
       display: none;
     }
+
 
     summary::after {
       margin-left: 7px;
       content: "⌄";
     }
+
 
     .dropdown {
       position: absolute;
@@ -190,9 +218,11 @@
       left: 0;
 
       min-width: 190px;
+
       padding: 9px;
 
-      background: var(--background);
+      background:
+        var(--background);
 
       border:
         1px solid var(--border);
@@ -202,27 +232,36 @@
         rgba(0, 0, 0, 0.18);
     }
 
+
     .dropdown a {
       display: block;
 
       padding:
         10px 12px;
 
-      color: var(--text);
+      color:
+        var(--text);
 
-      font-family: "Inter", Arial, sans-serif;
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
       font-size: 0.85rem;
       font-weight: 500;
       letter-spacing: 0.02em;
 
       text-decoration: none;
+
       white-space: nowrap;
     }
+
 
     .dropdown a:hover {
       background:
         var(--surface);
     }
+
 
     .theme-toggle {
       width: 36px;
@@ -249,10 +288,12 @@
       cursor: pointer;
     }
 
+
     .theme-toggle:hover {
       border-color:
         var(--text);
     }
+
 
 
     /* =========================
@@ -268,6 +309,7 @@
         70px 30px
         100px;
     }
+
 
     .page-label {
       margin:
@@ -294,9 +336,10 @@
         uppercase;
     }
 
+
     h1 {
       margin:
-        0 0 54px;
+        0 0 24px;
 
       font-family:
         "Crimson Pro",
@@ -319,6 +362,25 @@
     }
 
 
+    .page-intro {
+      max-width:
+        720px;
+
+      margin:
+        0 0 54px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        1.25rem;
+
+      line-height:
+        1.7;
+    }
+
+
+
     /* =========================
        MAIN SECTIONS
     ========================= */
@@ -331,6 +393,7 @@
         1px solid var(--border);
     }
 
+
     .source-section:first-of-type {
       padding-top:
         0;
@@ -338,6 +401,7 @@
       border-top:
         none;
     }
+
 
     .source-section h2 {
       margin:
@@ -362,6 +426,7 @@
     }
 
 
+
     /* =========================
        SUBGROUPS
     ========================= */
@@ -370,6 +435,7 @@
       margin-top:
         34px;
     }
+
 
     .source-group h3 {
       margin:
@@ -382,7 +448,7 @@
         serif;
 
       font-size:
-        1.18rem;
+        1.25rem;
 
       font-weight:
         600;
@@ -390,6 +456,7 @@
       line-height:
         1.5;
     }
+
 
 
     /* =========================
@@ -404,27 +471,37 @@
         none;
     }
 
+
     .source-item + .source-item {
       margin-top:
         18px;
     }
+
 
     .source-item {
       font-family:
         "Crimson Pro",
         Georgia,
         "Times New Roman",
-      serif;
+        serif;
 
-      font-size: 1.1rem;
-      line-height: 1.65;
+      font-size:
+        1.25rem;
+
+      line-height:
+        1.65;
     }
+
 
     .source-item .source-link {
-      font-size: inherit;
-      line-height: inherit;
+      font-size:
+        inherit;
+
+      line-height:
+        inherit;
     }
-    
+
+
 
     /* =========================
        LINKS
@@ -441,7 +518,7 @@
         serif;
 
       font-size:
-        1.1rem;
+        1.25rem;
 
       font-weight:
         400;
@@ -463,10 +540,12 @@
         0.2s;
     }
 
+
     .source-link:hover {
       text-decoration-color:
         var(--text);
     }
+
 
 
     /* =========================
@@ -474,22 +553,30 @@
     ========================= */
 
     .course-list {
-      margin:
-        0;
+      margin: 0;
 
       padding-left:
         26px;
+
+      font-size:
+        1.25rem;
+
+      line-height:
+        1.65;
     }
+
 
     .course-list li {
       padding-left:
         4px;
     }
 
+
     .course-list li + li {
       margin-top:
         8px;
     }
+
 
 
     /* =========================
@@ -517,6 +604,7 @@
     }
 
 
+
     /* =========================
        MOBILE
     ========================= */
@@ -537,6 +625,7 @@
           18px;
       }
 
+
       .nav-links {
         width:
           100%;
@@ -548,6 +637,7 @@
           10px 22px;
       }
 
+
       .dropdown {
         position:
           static;
@@ -555,6 +645,7 @@
         margin-top:
           5px;
       }
+
 
       main {
         padding-top:
@@ -589,17 +680,21 @@
 
       <div class="nav-links">
 
+
         <a href="../index.html">
           Home
         </a>
+
 
         <a href="../research.html">
           Research
         </a>
 
+
         <a href="../cv.html">
           CV
         </a>
+
 
 
         <details>
@@ -608,15 +703,18 @@
             Economics
           </summary>
 
+
           <div class="dropdown">
 
             <a href="empirical-studies.html">
               Empirical studies
             </a>
 
+
             <a href="notes.html">
               Notes
             </a>
+
 
             <a href="useful-sources.html">
               Useful sources
@@ -627,11 +725,13 @@
         </details>
 
 
+
         <details>
 
           <summary>
             Spoilers
           </summary>
+
 
           <div class="dropdown">
 
@@ -639,9 +739,11 @@
               Bookshelf
             </a>
 
+
             <a href="../spoilers/theater.html">
               Theater
             </a>
+
 
             <a href="../spoilers/life-in-japan.html">
               Life in Japan
@@ -650,6 +752,7 @@
           </div>
 
         </details>
+
 
 
         <button
@@ -661,6 +764,7 @@
         >
           ☀
         </button>
+
 
       </div>
 
@@ -676,24 +780,29 @@
 
   <main>
 
+
     <p class="page-label">
       Economics
     </p>
+
 
     <h1>
       Useful Sources
     </h1>
 
+
     <p class="page-intro">
       Some useful links and other stuff.
     </p>
-    
+
+
 
     <!-- =========================
          DATA SOURCES
     ========================= -->
 
     <section class="source-section">
+
 
       <h2>
         Data Sources
@@ -702,7 +811,9 @@
 
       <ul class="source-list">
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://comtrade.un.org/"
@@ -710,11 +821,16 @@
             rel="noopener noreferrer"
           >
             UN Comtrade:
-          </a> Bilateral trade flows, disaggreagte by HS code
+          </a>
+
+          Bilateral trade flows, disaggregated by HS code.
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://www.cepii.fr/DATA_DOWNLOAD/baci/doc/baci_webpage.html"
@@ -722,11 +838,16 @@
             rel="noopener noreferrer"
           >
             CEPII–BACI:
-          </a> Bilateral trade flows, HS code 6 digit, based on UNCTAD data
+          </a>
+
+          Bilateral trade flows, HS code 6 digit, based on UNCTAD data.
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://microdata.worldbank.org/catalog/?page=1&amp;ps=15"
@@ -735,10 +856,13 @@
           >
             World Bank’s Microdata Library
           </a>
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://kidb.adb.org/globalization"
@@ -747,10 +871,13 @@
           >
             ADB Multiregional Input-Output Model
           </a>
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://www.oecd.org/en/topics/sub-issues/trade-in-value-added.html"
@@ -759,10 +886,13 @@
           >
             OECD Inter-Country Input-Output — Trade in Value Added
           </a>
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://international.ipums.org/international/"
@@ -770,11 +900,16 @@
             rel="noopener noreferrer"
           >
             IPUMS International:
-          </a> harmonized microdata of different countries.
+          </a>
+
+          Harmonized microdata of different countries.
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://ilostat.ilo.org/"
@@ -782,21 +917,42 @@
             rel="noopener noreferrer"
           >
             ILO Stat:
-          </a> Labor data, employment and earnings, etc.
+          </a>
+
+          Labor data, employment and earnings, etc.
+
         </li>
 
 
+
         <li class="source-item">
+
           <a
             class="source-link"
             href="https://www.imf.org/en/data"
             target="_blank"
             rel="noopener noreferrer"
           >
-            IMF data:
-          </a> Data on debt, currencies, commodities.
+            IMF Data:
+          </a>
+
+          Data on debt, currencies, commodities.
+
         </li>
-        
+
+
+        <li class="source-item">
+
+          <a
+            class="source-link"
+            href="https://sites.google.com/view/fulbrightstudygroup/data-sources"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            More data sources - Fulbright Study Group (FSG)
+          </a>
+
+        </li>
 
       </ul>
 
@@ -810,6 +966,7 @@
 
     <section class="source-section">
 
+
       <h2>
         Online Courses
       </h2>
@@ -820,13 +977,17 @@
 
       <div class="source-group">
 
+
         <h3>
           BREAD–IGC
         </h3>
 
+
         <ul class="course-list">
 
+
           <li>
+
             <a
               class="source-link"
               href="https://www.theigc.org/events/bread-igc-virtual-phd-courses/bread-igc-virtual-phd-level-course-political-economy-2026"
@@ -835,10 +996,13 @@
             >
               Political Economy
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://www.theigc.org/events/bread-igc-virtual-phd-course/urban-economics"
@@ -847,10 +1011,13 @@
             >
               Urban Economics
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://www.theigc.org/events/bread-igc-virtual-phd-course/firms-development"
@@ -859,10 +1026,13 @@
             >
               Firms and Development
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://www.theigc.org/events/bread-igc-virtual-phd-course-environmental-economics"
@@ -871,7 +1041,9 @@
             >
               Environmental Economics
             </a>
+
           </li>
+
 
         </ul>
 
@@ -883,13 +1055,17 @@
 
       <div class="source-group">
 
+
         <h3>
           UNCTAD
         </h3>
 
+
         <ul class="course-list">
 
+
           <li>
+
             <a
               class="source-link"
               href="https://unctad.org/meeting/online-course-trade-critical-energy-transition-minerals-and-women"
@@ -898,7 +1074,9 @@
             >
               Trade, Critical Energy Transition Minerals and Women
             </a>
+
           </li>
+
 
         </ul>
 
@@ -910,14 +1088,17 @@
 
       <div class="source-group">
 
+
         <h3>
           Course Materials
         </h3>
+
 
         <ul class="course-list">
 
 
           <li>
+
             <a
               class="source-link"
               href="https://github.com/jdingel/econ6905"
@@ -926,10 +1107,13 @@
             >
               ECON G6905: Topics in Trade
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://arkolakis.com/teaching/"
@@ -938,10 +1122,13 @@
             >
               Advanced International Trade — Costas Arkolakis
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://about.peterhull.net/metrix"
@@ -950,10 +1137,13 @@
             >
               'Metrics Notes — Peter Hull
             </a>
+
           </li>
 
 
+
           <li>
+
             <a
               class="source-link"
               href="https://psantanna.com/"
@@ -962,12 +1152,14 @@
             >
               Difference-in-Differences — Pedro H. C. Sant'Anna
             </a>
+
           </li>
 
 
         </ul>
 
       </div>
+
 
     </section>
 
@@ -979,12 +1171,14 @@
 
     <section class="source-section">
 
+
       <h2>
         Online Seminars
       </h2>
 
 
       <ul class="source-list">
+
 
         <li class="source-item">
 
@@ -998,6 +1192,7 @@
           </a>
 
         </li>
+
 
 
         <li class="source-item">
@@ -1014,6 +1209,7 @@
         </li>
 
 
+
         <li class="source-item">
 
           <a
@@ -1027,6 +1223,7 @@
 
         </li>
 
+
       </ul>
 
     </section>
@@ -1039,12 +1236,14 @@
 
     <section class="source-section">
 
+
       <h2>
         Websites &amp; Blogs
       </h2>
 
 
       <ul class="source-list">
+
 
         <li class="source-item">
 
@@ -1060,6 +1259,7 @@
         </li>
 
 
+
         <li class="source-item">
 
           <a
@@ -1073,6 +1273,7 @@
 
         </li>
 
+
       </ul>
 
     </section>
@@ -1085,12 +1286,14 @@
 
     <section class="source-section">
 
+
       <h2>
         More
       </h2>
 
 
       <ul class="source-list">
+
 
         <li class="source-item">
 
@@ -1104,6 +1307,7 @@
           </a>
 
         </li>
+
 
       </ul>
 
@@ -1137,6 +1341,7 @@
     const page =
       document.documentElement;
 
+
     const toggle =
       document.getElementById(
         "theme-toggle"
@@ -1164,6 +1369,7 @@
           page.dataset.theme === "dark"
             ? "light"
             : "dark";
+
 
         page.dataset.theme =
           newTheme;

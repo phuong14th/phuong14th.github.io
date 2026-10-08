@@ -27,11 +27,17 @@
 #  "⊙" là phép nhân từng phần tử (Hadamard): hàng i của ma trận sh (i x k)
 #  được nhân với vô hướng c_i và DVA_i của ngành i.
 #
+#  Lưu ý diễn giải: vì sum_k sh_ik = 1 ở cả hai kỳ nên sum_k Δsh_ik = 0, do đó
+#  Reallocation effect cộng theo k LUÔN BẰNG 0 cho từng ngành i (và cho toàn
+#  nền kinh tế). Hiệu ứng này chỉ phân bổ lại FDVA giữa các chức năng trong
+#  cùng một ngành, nên chỉ nhìn thấy ở mức (i, k) và khi tổng hợp theo chức
+#  năng k; ở mức ngành i / tổng, ΔFDVA = Intensity + Scale.
+#
 #  Cách dùng:
-#     1. Điền đường dẫn / link dữ liệu ở MỤC 1 (đang để trống – xem TODO).
+#     1. Điền đường dẫn / link dữ liệu và 2 năm ở MỤC 1 (đang để trống – xem TODO).
 #     2. Chạy toàn bộ file. Kết quả nằm trong `res` và (tuỳ chọn) được ghi ra
 #        thư mục `out_dir` dưới dạng CSV.
-#     Khi chưa điền link, script tự tạo DỮ LIỆU MẪU để chạy thử.
+#     Khi chưa điền link, script tự tạo DỮ LIỆU MẪU (MỤC 5) để chạy thử.
 # =============================================================================
 
 
@@ -47,8 +53,9 @@ options(stringsAsFactors = FALSE)
 # -----------------------------------------------------------------------------
 # MỤC 1. IMPORT DỮ LIỆU  ====>  TODO: ĐIỀN LINK / ĐƯỜNG DẪN DỮ LIỆU TẠI ĐÂY <====
 # -----------------------------------------------------------------------------
-# Để trống ("") thì script sẽ dùng dữ liệu mẫu (MỤC 5) để chạy thử.
+# Để trống ("") cả hai thì script dùng dữ liệu mẫu (MỤC 5) để chạy thử.
 # Chấp nhận: đường dẫn file local hoặc URL (http/https); đuôi .csv / .xlsx / .xls
+# (Google Sheets: dùng link .../export?format=csv và đặt format_* = "csv" bên dưới)
 
 path_LI <- ""   # TODO: file labor income LI_ik theo năm
                 #       Dạng dài (long), các cột: industry | func | year | LI
@@ -66,42 +73,131 @@ col_LI       <- "LI"         # labor income LI_ik
 col_VA       <- "VA"         # value added VA_i
 col_DVA      <- "DVA"        # domestic value added DVA_i
 
+# Tuỳ chọn (thường không cần sửa)
+col_country  <- ""           # TODO (tuỳ chọn): tên cột quốc gia nếu file có NHIỀU nước, ví dụ "country"
+country      <- ""           # TODO (tuỳ chọn): mã nước cần tính, ví dụ "VNM"  (để "" nếu file chỉ có 1 nước)
+format_LI    <- ""           # "" = nhận dạng theo đuôi file; hoặc "csv" / "xlsx" (dùng khi link không có đuôi file)
+format_VA    <- ""
+sheet_LI     <- 1            # sheet (số thứ tự hoặc tên) nếu là file Excel
+sheet_VA     <- 1
+csv_sep      <- ""           # "" = tự phát hiện dấu phân cách CSV ("," hoặc ";" hoặc tab); hoặc điền trực tiếp
+csv_dec      <- ""           # "" = tự chọn dấu thập phân ("," nếu file phân cách bằng ";", còn lại "."); hoặc điền "." / ","
+
 # Ghi kết quả ra CSV?
 write_output <- TRUE
 out_dir      <- "output_sda"   # TODO (tuỳ chọn): thư mục lưu kết quả
 
 
 # -----------------------------------------------------------------------------
-# MỤC 2. HÀM HỖ TRỢ ĐỌC VÀ CHUYỂN DẠNG DỮ LIỆU
+# MỤC 2. HÀM HỖ TRỢ ĐỌC VÀ KIỂM TRA DỮ LIỆU
 # -----------------------------------------------------------------------------
 
+# Báo lỗi rõ ràng nếu thiếu cột (liệt kê các cột có trong file để dễ sửa col_* ở MỤC 1)
+check_cols <- function(df, cols, what = "") {
+  missing <- setdiff(cols, names(df))
+  if (length(missing) > 0)
+    stop("Không tìm thấy cột ", paste(sprintf("'%s'", missing), collapse = ", "),
+         if (nzchar(what)) paste0(" trong file ", what) else "",
+         ". Các cột có trong file: ", paste(names(df), collapse = " | "),
+         ". Sửa tên cột (col_*) ở MỤC 1 hoặc kiểm tra dấu phân cách CSV (csv_sep).")
+  invisible(TRUE)
+}
+
+# Ép sang số; DỪNG nếu có ô trống / không phải số (tránh lặng lẽ biến thành 0 hay NA)
+parse_numeric <- function(x, what) {
+  num <- suppressWarnings(as.numeric(as.character(x)))
+  bad <- is.na(num)
+  if (any(bad))
+    stop("Cột '", what, "' có ", sum(bad), " giá trị trống hoặc không phải số, ví dụ: ",
+         paste(sprintf("'%s'", head(unique(as.character(x[bad])), 3)), collapse = ", "),
+         ". Hãy bỏ dấu phẩy ngăn cách hàng nghìn / ký hiệu n.a. / ô trống rồi chạy lại.")
+  num
+}
+
 # Đọc bảng từ csv / xlsx / xls, file local hoặc URL
-read_table_any <- function(path, sheet = 1) {
-  ext <- tolower(tools::file_ext(sub("[?#].*$", "", path)))
-  if (ext == "csv") {
-    return(read.csv(path, check.names = FALSE))
+read_table_any <- function(path, format = "", sheet = 1) {
+  is_url <- grepl("^https?://", path)
+  ext <- tolower(if (nzchar(format)) format else tools::file_ext(sub("[?#].*$", "", path)))
+  if (ext == "" && is_url) {
+    message("Link không có đuôi file -> giả định là CSV (đặt format_* ở MỤC 1 nếu khác): ", path)
+    ext <- "csv"
   }
+
+  if (ext == "csv") {
+    sep <- csv_sep
+    if (!nzchar(sep)) {                         # tự phát hiện dấu phân cách từ dòng tiêu đề
+      first <- readLines(path, n = 1, warn = FALSE, encoding = "UTF-8")
+      sep <- if (grepl(";", first) && !grepl(",", first)) ";"
+             else if (grepl("\t", first) && !grepl(",", first)) "\t"
+             else ","
+    }
+    dec <- if (nzchar(csv_dec)) csv_dec else if (sep == ";") "," else "."
+    if (sep != ",")
+      message("CSV phân cách bằng '", if (sep == "\t") "tab" else sep, "', dấu thập phân '", dec, "': ", path)
+    return(read.csv(path, sep = sep, dec = dec, check.names = FALSE,
+                    fileEncoding = "UTF-8-BOM", strip.white = TRUE))
+  }
+
   if (ext %in% c("xlsx", "xls")) {
     if (!requireNamespace("readxl", quietly = TRUE))
       stop("Cần cài gói 'readxl' để đọc file Excel: install.packages('readxl')")
-    if (grepl("^https?://", path)) {              # readxl không đọc trực tiếp URL
+    if (is_url) {                               # readxl không đọc trực tiếp URL
       tmp <- tempfile(fileext = paste0(".", ext))
       download.file(path, tmp, mode = "wb", quiet = TRUE)
       path <- tmp
     }
     return(as.data.frame(readxl::read_excel(path, sheet = sheet)))
   }
-  stop("Không nhận dạng được định dạng file: ", path, " (chỉ hỗ trợ csv/xlsx/xls)")
+
+  stop("Không nhận dạng được định dạng file: ", path,
+       " (chỉ hỗ trợ csv/xlsx/xls; có thể đặt format_* = \"csv\" hoặc \"xlsx\" ở MỤC 1)")
+}
+
+# Lọc đúng năm (so sánh dưới dạng chuỗi nên 2010 và "2010" đều được)
+filter_year <- function(df, year, what = "") {
+  if (length(year) != 1 || is.na(year)) stop("Chưa điền year0 / year1 ở MỤC 1")
+  check_cols(df, col_year, what)
+  yrs <- df[[col_year]]
+  out <- df[!is.na(yrs) & as.character(yrs) == as.character(year), , drop = FALSE]
+  if (nrow(out) == 0)
+    stop("Không có dữ liệu cho năm ", year, if (nzchar(what)) paste0(" trong file ", what) else "",
+         ". Các năm có trong file: ", paste(sort(unique(yrs[!is.na(yrs)])), collapse = ", "))
+  out
+}
+
+# Lọc theo quốc gia (chỉ khi col_country / country được điền ở MỤC 1)
+filter_country <- function(df, what = "") {
+  if (!nzchar(col_country) && !nzchar(country)) return(df)
+  if (!nzchar(col_country) || !nzchar(country))
+    stop("Phải điền cả col_country và country ở MỤC 1 (hoặc để trống cả hai)")
+  check_cols(df, col_country, what)
+  ct  <- df[[col_country]]
+  out <- df[!is.na(ct) & as.character(ct) == country, , drop = FALSE]
+  if (nrow(out) == 0)
+    stop("Không có dữ liệu cho quốc gia '", country, "'", if (nzchar(what)) paste0(" trong file ", what) else "",
+         ". Các quốc gia có trong file: ", paste(head(sort(unique(ct[!is.na(ct)])), 30), collapse = ", "))
+  out
 }
 
 # Chuyển bảng dạng dài -> ma trận (hàng = `row`, cột = `col`, giá trị = `value`).
-# Giữ nguyên thứ tự xuất hiện của ngành / chức năng; tổ hợp thiếu được gán 0.
+# - Mỗi cặp (row, col) chỉ được 1 dòng; có dòng trùng -> DỪNG (không tự cộng dồn).
+# - Giữ nguyên thứ tự xuất hiện của ngành / chức năng.
+# - Tổ hợp (ngành, chức năng) không có trong dữ liệu được gán 0 và được in ra để kiểm tra.
 long_to_matrix <- function(df, row, col, value) {
-  for (v in c(row, col, value))
-    if (!v %in% names(df)) stop("Không tìm thấy cột '", v, "' trong dữ liệu")
+  check_cols(df, c(row, col, value))
+  if (anyDuplicated(df[c(row, col)]) > 0)
+    stop("Có nhiều hơn 1 dòng cho cùng cặp (", row, ", ", col, ") trong một năm. ",
+         "Nếu file có nhiều quốc gia, điền col_country / country ở MỤC 1; ",
+         "nếu không, kiểm tra dữ liệu bị lặp.")
+  x <- parse_numeric(df[[value]], value)
   r <- factor(df[[row]], levels = unique(df[[row]]))
   k <- factor(df[[col]], levels = unique(df[[col]]))
-  m <- tapply(as.numeric(df[[value]]), list(r, k), sum)
+  m <- tapply(x, list(r, k), sum)
+  miss <- which(is.na(m), arr.ind = TRUE)
+  if (nrow(miss) > 0)
+    message(nrow(miss), " tổ hợp (ngành, chức năng) không có trong dữ liệu, được gán ",
+            value, " = 0: ",
+            paste(rownames(m)[miss[, 1]], colnames(m)[miss[, 2]], sep = "/", collapse = ", "))
   m[is.na(m)] <- 0
   m <- unclass(m)                       # bỏ class "table" của tapply -> ma trận thường
   storage.mode(m) <- "double"
@@ -110,18 +206,11 @@ long_to_matrix <- function(df, row, col, value) {
 
 # Chuyển bảng dạng dài -> vector có tên (tên = `name`, giá trị = `value`)
 long_to_vector <- function(df, name, value) {
-  for (v in c(name, value))
-    if (!v %in% names(df)) stop("Không tìm thấy cột '", v, "' trong dữ liệu")
-  if (anyDuplicated(df[[name]]))
-    stop("Cột '", name, "' bị trùng trong cùng một năm – mỗi ngành chỉ được 1 dòng/năm")
-  setNames(as.numeric(df[[value]]), as.character(df[[name]]))
-}
-
-# Lọc đúng năm
-filter_year <- function(df, year) {
-  out <- df[df[[col_year]] == year, , drop = FALSE]
-  if (nrow(out) == 0) stop("Không có dữ liệu cho năm ", year)
-  out
+  check_cols(df, c(name, value))
+  if (anyDuplicated(df[[name]]) > 0)
+    stop("Cột '", name, "' bị trùng trong cùng một năm – mỗi ngành chỉ được 1 dòng/năm ",
+         "(nếu file có nhiều quốc gia, điền col_country / country ở MỤC 1)")
+  setNames(parse_numeric(df[[value]], value), as.character(df[[name]]))
 }
 
 
@@ -138,26 +227,31 @@ row_scale <- function(M, v) {
 # sh_ik = LI_ik / sum_k LI_ik   (ma trận i x k, mỗi hàng cộng lại = 1)
 compute_sh <- function(LI) {
   tot <- rowSums(LI)
-  if (any(tot == 0, na.rm = TRUE))
-    warning("Có ngành với tổng labor income = 0; sh_ik của ngành đó được gán 0")
-  sh <- row_scale(LI, ifelse(tot == 0, 0, 1 / tot))
-  sh
+  if (any(tot == 0))
+    warning("Ngành có tổng labor income = 0 (", paste(names(tot)[tot == 0], collapse = ", "),
+            "): sh_ik của ngành đó được gán 0 (quy ước; FDVA của ngành đó = 0 trong kỳ này)")
+  row_scale(LI, ifelse(tot == 0, 0, 1 / tot))
 }
 
 # c_i = sum_k LI_ik / VA_i   (vector theo ngành)
 compute_c <- function(LI, VA) {
   stopifnot(length(VA) == nrow(LI))
-  if (any(VA == 0, na.rm = TRUE))
-    warning("Có ngành với VA = 0; c_i của ngành đó sẽ là NA/Inf")
+  if (any(is.na(VA) | VA == 0))
+    warning("Có ngành với VA = 0 hoặc NA; c_i của ngành đó sẽ là NA/Inf")
   rowSums(LI) / VA
 }
 
 # Sắp xếp / kiểm tra để 2 kỳ có cùng tập ngành (hàng) và chức năng (cột),
 # cùng thứ tự với VA và DVA. Ngành / chức năng chỉ có ở 1 kỳ sẽ bị báo lỗi.
 align_inputs <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
+  for (nm in c("LI0", "LI1", "VA0", "VA1", "DVA0", "DVA1")) {
+    x <- get(nm)
+    if (!is.numeric(x) || anyNA(x)) stop("Đầu vào ", nm, " phải là số và không chứa NA")
+  }
   ind  <- rownames(LI0); fun <- colnames(LI0)
+  if (is.null(ind) || is.null(fun)) stop("LI0 phải có tên hàng (ngành) và tên cột (chức năng)")
   chk <- function(x, ref, what) {
-    if (!setequal(x, ref))
+    if (is.null(x) || !setequal(x, ref))
       stop("Tập ", what, " không khớp giữa các đầu vào. Chỉ có ở một bên: ",
            paste(c(setdiff(x, ref), setdiff(ref, x)), collapse = ", "))
   }
@@ -199,8 +293,10 @@ sda_fdva <- function(sh0, sh1, c0, c1, DVA0, DVA1) {
 
   # Kiểm tra: tổng 3 hiệu ứng phải bằng ΔFDVA (sai số chỉ do làm tròn số)
   residual <- delta - (reallocation + intensity + scale)
-  if (max(abs(residual), na.rm = TRUE) > 1e-8 * max(1, max(abs(delta), na.rm = TRUE)))
-    warning("Tổng 3 hiệu ứng KHÔNG bằng ΔFDVA – kiểm tra lại dữ liệu đầu vào (NA/Inf?)")
+  if (anyNA(residual))
+    warning("Kết quả có NA/NaN – kiểm tra VA = 0 hoặc dữ liệu thiếu")
+  else if (max(abs(residual)) > 1e-8 * max(1, max(abs(delta))))
+    warning("Tổng 3 hiệu ứng KHÔNG bằng ΔFDVA – kiểm tra lại dữ liệu đầu vào")
 
   list(FDVA0 = FDVA0, FDVA1 = FDVA1, delta_FDVA = delta,
        reallocation = reallocation, intensity = intensity, scale = scale,
@@ -236,13 +332,17 @@ run_sda <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
     scale        = as.vector(dec$scale)
   )
 
-  # Tổng hợp theo chức năng k (cộng theo ngành) và theo ngành i (cộng theo chức năng)
+  # Tổng hợp theo chức năng k (cộng theo ngành) và theo ngành i (cộng theo chức năng).
+  # Sai số làm tròn (cỡ 1e-15) được đưa về 0 để các tổng bằng 0 về mặt lý thuyết
+  # (Reallocation theo ngành / tổng) không hiển thị thành số rất nhỏ gây hiểu nhầm.
+  tol <- 1e-10 * max(1, max(abs(dec$delta_FDVA), na.rm = TRUE))
+  zap <- function(x) { x[!is.na(x) & abs(x) < tol] <- 0; x }
   agg <- function(f) {
     out <- data.frame(
-      delta_FDVA   = f(dec$delta_FDVA),
-      reallocation = f(dec$reallocation),
-      intensity    = f(dec$intensity),
-      scale        = f(dec$scale)
+      delta_FDVA   = zap(f(dec$delta_FDVA)),
+      reallocation = zap(f(dec$reallocation)),
+      intensity    = zap(f(dec$intensity)),
+      scale        = zap(f(dec$scale))
     )
     # % đóng góp của từng hiệu ứng vào ΔFDVA (NA nếu ΔFDVA = 0)
     pct <- function(x) ifelse(out$delta_FDVA == 0, NA, 100 * x / out$delta_FDVA)
@@ -251,8 +351,8 @@ run_sda <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
     out$scale_pct        <- pct(out$scale)
     out
   }
-  by_function <- agg(colSums);  by_function <- cbind(func = fun, by_function)
-  by_industry <- agg(rowSums);  by_industry <- cbind(industry = ind, by_industry)
+  by_function <- cbind(func = fun,     agg(colSums))
+  by_industry <- cbind(industry = ind, agg(rowSums))
   total       <- agg(function(M) sum(M))
   rownames(by_function) <- rownames(by_industry) <- NULL
 
@@ -267,16 +367,23 @@ run_sda <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
 # MỤC 4. ĐỌC DỮ LIỆU THẬT (khi đã điền link ở MỤC 1)
 # -----------------------------------------------------------------------------
 load_inputs <- function() {
-  LI_long <- read_table_any(path_LI)
-  VA_long <- read_table_any(path_VA)
+  if (!nzchar(path_LI) || !nzchar(path_VA)) stop("Phải điền cả path_LI và path_VA ở MỤC 1")
+  if (is.na(year0) || is.na(year1))         stop("Chưa điền year0 / year1 ở MỤC 1")
 
-  LI0 <- long_to_matrix(filter_year(LI_long, year0), col_industry, col_func, col_LI)
-  LI1 <- long_to_matrix(filter_year(LI_long, year1), col_industry, col_func, col_LI)
+  LI_long <- read_table_any(path_LI, format_LI, sheet_LI)
+  VA_long <- read_table_any(path_VA, format_VA, sheet_VA)
+  check_cols(LI_long, c(col_industry, col_func, col_year, col_LI), "LI")
+  check_cols(VA_long, c(col_industry, col_year, col_VA, col_DVA),  "VA")
+  LI_long <- filter_country(LI_long, "LI")
+  VA_long <- filter_country(VA_long, "VA")
 
-  VA0  <- long_to_vector(filter_year(VA_long, year0), col_industry, col_VA)
-  VA1  <- long_to_vector(filter_year(VA_long, year1), col_industry, col_VA)
-  DVA0 <- long_to_vector(filter_year(VA_long, year0), col_industry, col_DVA)
-  DVA1 <- long_to_vector(filter_year(VA_long, year1), col_industry, col_DVA)
+  LI0 <- long_to_matrix(filter_year(LI_long, year0, "LI"), col_industry, col_func, col_LI)
+  LI1 <- long_to_matrix(filter_year(LI_long, year1, "LI"), col_industry, col_func, col_LI)
+
+  VA0  <- long_to_vector(filter_year(VA_long, year0, "VA"), col_industry, col_VA)
+  VA1  <- long_to_vector(filter_year(VA_long, year1, "VA"), col_industry, col_VA)
+  DVA0 <- long_to_vector(filter_year(VA_long, year0, "VA"), col_industry, col_DVA)
+  DVA1 <- long_to_vector(filter_year(VA_long, year1, "VA"), col_industry, col_DVA)
 
   list(LI0 = LI0, LI1 = LI1, VA0 = VA0, VA1 = VA1, DVA0 = DVA0, DVA1 = DVA1)
 }
@@ -307,8 +414,10 @@ make_example_inputs <- function(n_ind = 5, seed = 123) {
 # -----------------------------------------------------------------------------
 # MỤC 6. CHẠY
 # -----------------------------------------------------------------------------
-if (nzchar(path_LI) && nzchar(path_VA)) {
-  message("Đọc dữ liệu từ:\n  LI : ", path_LI, "\n  VA : ", path_VA)
+if (nzchar(path_LI) || nzchar(path_VA)) {
+  message("Đọc dữ liệu từ:\n  LI : ", path_LI, "\n  VA : ", path_VA,
+          if (nzchar(country)) paste0("\n  Quốc gia: ", country) else "",
+          "\n  Năm: ", year0, " -> ", year1)
   inputs <- load_inputs()
 } else {
   message("*** CHƯA ĐIỀN LINK DỮ LIỆU (path_LI / path_VA ở MỤC 1) -> dùng DỮ LIỆU MẪU ***")
@@ -318,11 +427,11 @@ if (nzchar(path_LI) && nzchar(path_VA)) {
 res <- with(inputs, run_sda(LI0, LI1, VA0, VA1, DVA0, DVA1))
 
 cat("\n===== Kiểm tra: max |ΔFDVA - (reallocation + intensity + scale)| =",
-    format(max(abs(res$matrices$residual)), digits = 3), "=====\n")
+    format(max(abs(res$matrices$residual), na.rm = TRUE), digits = 3), "=====\n")
 
-cat("\n----- Tổng toàn nền kinh tế -----\n");      print(res$total)
-cat("\n----- Theo chức năng k -----\n");           print(res$by_function)
-cat("\n----- Theo ngành i -----\n");               print(res$by_industry)
+cat("\n----- Tổng toàn nền kinh tế (Reallocation = 0 theo lý thuyết) -----\n"); print(res$total)
+cat("\n----- Theo chức năng k -----\n");                                         print(res$by_function)
+cat("\n----- Theo ngành i (Reallocation = 0 theo lý thuyết) -----\n");           print(res$by_industry)
 cat("\n----- Chi tiết theo (ngành i, chức năng k) – 10 dòng đầu -----\n")
 print(head(res$table, 10))
 
@@ -338,11 +447,23 @@ if (write_output) {
 
 # -----------------------------------------------------------------------------
 # GHI CHÚ
-# - Nếu có nhiều quốc gia: tách dữ liệu theo quốc gia rồi gọi run_sda() cho
-#   từng quốc gia, ví dụ:
-#     res_by_country <- lapply(split(LI_long, LI_long$country), function(d) { ... })
-# - Nếu dữ liệu đã có sẵn sh_ik và c_i (không có LI/VA), gọi trực tiếp
+# - Nhiều quốc gia: điền col_country và country ở MỤC 1 để tính cho một nước.
+#   Để tính lần lượt nhiều nước (sau khi đã điền path_LI, path_VA, year0, year1):
+#     res_by_country <- list()
+#     for (ct in c("VNM", "THA", "IDN")) {
+#       country <- ct
+#       inputs  <- load_inputs()
+#       res_by_country[[ct]] <- with(inputs, run_sda(LI0, LI1, VA0, VA1, DVA0, DVA1))
+#     }
+# - Dữ liệu dạng rộng (hàng = ngành, cột = chức năng, 1 file/năm): đọc thẳng
+#   thành ma trận rồi gọi run_sda(), ví dụ:
+#     LI0 <- as.matrix(read.csv("LI_2010.csv", row.names = 1, check.names = FALSE))
+# - Nếu đã có sẵn sh_ik và c_i (không có LI/VA), gọi trực tiếp
 #   sda_fdva(sh0, sh1, c0, c1, DVA0, DVA1).
-# - Tổng 3 hiệu ứng luôn bằng ΔFDVA_ik (trung bình 2 phân rã polar), nên không
-#   có phần dư (interaction term).
+# - Tổng 3 hiệu ứng luôn bằng ΔFDVA_ik (trung bình 2 phân rã polar), không có
+#   phần dư (interaction term). Reallocation cộng theo chức năng k = 0 cho từng
+#   ngành (xem lưu ý ở đầu file).
+# - Ngành có tổng LI = 0 ở một kỳ: sh_ik kỳ đó được quy ước = 0 (công thức
+#   không xác định 0/0); FDVA kỳ đó = 0 và cách chia 3 hiệu ứng cho ngành đó
+#   chỉ mang tính quy ước.
 # -----------------------------------------------------------------------------

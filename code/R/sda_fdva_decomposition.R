@@ -111,9 +111,24 @@ check_cols <- function(df, cols, what = "") {
   invisible(TRUE)
 }
 
-# Ép sang số; DỪNG nếu có ô trống / không phải số (tránh lặng lẽ biến thành 0 hay NA)
-parse_numeric <- function(x, what) {
-  num <- suppressWarnings(as.numeric(as.character(x)))
+# Ép sang số; DỪNG nếu có ô trống / không phải số (tránh lặng lẽ biến thành 0 hay NA).
+# `dec` là dấu thập phân của file ("." hoặc ","), dùng khi cột chưa được đọc thành số.
+parse_numeric <- function(x, what, dec = ".") {
+  if (is.numeric(x)) {
+    num <- x
+  } else {
+    s <- trimws(as.character(x))
+    if (dec == ",") {
+      has_dot <- !is.na(s) & grepl(".", s, fixed = TRUE)
+      if (any(has_dot))
+        stop("Cột '", what, "' có giá trị chứa dấu chấm (ví dụ: ",
+             paste(sprintf("'%s'", head(unique(s[has_dot]), 3)), collapse = ", "),
+             ") trong khi file dùng dấu thập phân ','. Bỏ dấu chấm ngăn cách hàng nghìn ",
+             "rồi chạy lại, hoặc đặt csv_dec = \".\" ở MỤC 1 nếu file thực ra dùng dấu chấm thập phân.")
+      s <- sub(",", ".", s, fixed = TRUE)
+    }
+    num <- suppressWarnings(as.numeric(s))
+  }
   bad <- is.na(num)
   if (any(bad))
     stop("Cột '", what, "' có ", sum(bad), " giá trị trống hoặc không phải số, ví dụ: ",
@@ -141,12 +156,13 @@ read_table_any <- function(path, format = "", sheet = 1) {
            ". Mở bằng Excel -> Save As -> 'CSV UTF-8 (Comma delimited)' rồi chạy lại.")
     b <- charToRaw(raw[1])                      # bỏ BOM (Excel 'CSV UTF-8' thêm 3 byte đầu file)
     if (length(b) >= 3 && identical(b[1:3], as.raw(c(0xef, 0xbb, 0xbf)))) raw[1] <- rawToChar(b[-(1:3)])
-    raw <- raw[nzchar(trimws(raw))]             # bỏ dòng trống
+    keep <- which(nzchar(trimws(raw)))          # bỏ dòng trống (keep = số dòng gốc trong file)
+    raw  <- raw[keep]
     if (length(raw) < 2) stop("File chỉ có dòng tiêu đề, không có dòng dữ liệu: ", path)
     odd_q <- which(lengths(regmatches(raw, gregexpr('"', raw, fixed = TRUE))) %% 2 == 1)
     if (length(odd_q) > 0)                      # dấu " không đóng sẽ nuốt các dòng sau vào 1 ô
-      stop("Dấu ngoặc kép (\") không đóng ở dòng ", paste(head(odd_q, 5), collapse = ", "),
-           " của file ", path)
+      stop("Dấu ngoặc kép (\") không đóng ở dòng ", paste(head(keep[odd_q], 5), collapse = ", "),
+           " của file ", path, " (ô có xuống dòng bên trong dấu ngoặc kép cũng không được hỗ trợ)")
     sep <- csv_sep
     if (!nzchar(sep)) {                         # tự phát hiện dấu phân cách từ dòng tiêu đề
       first <- raw[1]
@@ -157,11 +173,18 @@ read_table_any <- function(path, format = "", sheet = 1) {
     dec <- if (nzchar(csv_dec)) csv_dec else if (sep == ";") "," else "."
     if (sep != ",")
       message("CSV phân cách bằng '", if (sep == "\t") "tab" else sep, "', dấu thập phân '", dec, "': ", path)
+    nf  <- count.fields(textConnection(raw), sep = sep, quote = "\"", blank.lines.skip = FALSE)
+    bad <- which(nf != nf[1])                   # mọi dòng phải có đúng số cột như dòng tiêu đề
+    if (length(bad) > 0)
+      stop("Dòng ", paste(head(keep[bad], 5), collapse = ", "), " của file ", path, " có ",
+           nf[bad[1]], " cột, khác dòng tiêu đề (", nf[1], " cột) – kiểm tra dấu phân cách '",
+           if (sep == "\t") "tab" else sep, "' hoặc dấu phân cách thừa / thiếu ở cuối dòng.")
     df <- read.csv(text = raw, sep = sep, dec = dec, check.names = FALSE, strip.white = TRUE,
-                   encoding = "UTF-8", na.strings = "")   # chỉ ô trống là NA; mã "NA" vẫn là chuỗi "NA"
+                   encoding = "UTF-8", na.strings = "", row.names = NULL)  # chỉ ô trống là NA; mã "NA" vẫn là chuỗi
     if (nrow(df) != length(raw) - 1)
-      stop("Chỉ đọc được ", nrow(df), "/", length(raw) - 1, " dòng dữ liệu từ ", path,
-           " – kiểm tra dấu ngoặc kép (\") không đóng hoặc dòng bị lỗi.")
+      stop("Đọc được ", nrow(df), " dòng dữ liệu nhưng file có ", length(raw) - 1,
+           " dòng (", path, ") – kiểm tra dấu ngoặc kép hoặc dòng bị lỗi.")
+    attr(df, "dec") <- dec                      # ghi nhớ dấu thập phân để ép kiểu số sau này
     return(df)
   }
 
@@ -173,7 +196,9 @@ read_table_any <- function(path, format = "", sheet = 1) {
       download.file(path, tmp, mode = "wb", quiet = TRUE)
       path <- tmp
     }
-    return(as.data.frame(readxl::read_excel(path, sheet = sheet)))
+    df <- as.data.frame(readxl::read_excel(path, sheet = sheet))
+    attr(df, "dec") <- "."
+    return(df)
   }
 
   stop("Không nhận dạng được định dạng file: ", path,
@@ -182,7 +207,7 @@ read_table_any <- function(path, format = "", sheet = 1) {
 
 # Bỏ khoảng trắng thừa ở các cột mã (ngành, chức năng, quốc gia): "A " -> "A"
 trim_keys <- function(df) {
-  for (cc in intersect(c(col_industry, col_func, col_country), names(df)))
+  for (cc in intersect(setdiff(c(col_industry, col_func, col_country), ""), names(df)))
     df[[cc]] <- trimws(as.character(df[[cc]]))
   df
 }
@@ -192,7 +217,7 @@ check_keys <- function(df, cols) {
   for (v in cols)
     if (anyNA(df[[v]]) || any(!nzchar(df[[v]])))
       stop("Cột '", v, "' có ", sum(is.na(df[[v]]) | !nzchar(df[[v]])),
-           " ô trống – mỗi dòng phải có mã ngành / chức năng")
+           " ô trống – mỗi dòng phải có mã (ngành / chức năng / quốc gia) ở cột này")
   invisible(TRUE)
 }
 
@@ -228,8 +253,9 @@ filter_country <- function(df, what = "") {
   if (!nzchar(col_country) || !nzchar(country))
     stop("Phải điền cả col_country và country ở MỤC 1 (hoặc để trống cả hai)")
   check_cols(df, col_country, what)
+  check_keys(df, col_country)                   # ô quốc gia trống -> dừng, không lặng lẽ bỏ dòng
   ct  <- df[[col_country]]
-  out <- df[!is.na(ct) & as.character(ct) == country, , drop = FALSE]
+  out <- df[as.character(ct) == country, , drop = FALSE]
   if (nrow(out) == 0)
     stop("Không có dữ liệu cho quốc gia '", country, "'", if (nzchar(what)) paste0(" trong file ", what) else "",
          ". Các quốc gia có trong file: ", paste(head(sort(unique(ct[!is.na(ct)])), 30), collapse = ", "))
@@ -334,6 +360,22 @@ sda_fdva <- function(sh0, sh1, c0, c1, DVA0, DVA1) {
             length(c0) == nrow(sh0), length(c1) == nrow(sh0),
             length(DVA0) == nrow(sh0), length(DVA1) == nrow(sh0))
 
+  # Nếu có tên ngành / chức năng thì sắp xếp mọi đầu vào theo thứ tự của sh0
+  # (tránh nhân nhầm ngành khi gọi trực tiếp với vector sắp xếp khác thứ tự)
+  ind <- rownames(sh0); fun <- colnames(sh0)
+  by_name <- function(v, nm) {
+    if (is.null(ind) || is.null(names(v))) return(v)
+    if (!setequal(names(v), ind)) stop("Tên ngành của ", nm, " không khớp với tên hàng của sh0")
+    v[ind]
+  }
+  c0 <- by_name(c0, "c0");     c1 <- by_name(c1, "c1")
+  DVA0 <- by_name(DVA0, "DVA0"); DVA1 <- by_name(DVA1, "DVA1")
+  if (!is.null(ind) && !is.null(rownames(sh1))) {
+    if (!setequal(rownames(sh1), ind) || !setequal(colnames(sh1), fun))
+      stop("Tên hàng / cột của sh1 không khớp với sh0")
+    sh1 <- sh1[ind, fun, drop = FALSE]
+  }
+
   d_sh  <- sh1  - sh0          # Δsh_ik
   d_c   <- c1   - c0           # Δc_i
   d_DVA <- DVA1 - DVA0         # ΔDVA_i
@@ -396,12 +438,14 @@ run_sda <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
   )
 
   # Tổng hợp theo chức năng k (cộng theo ngành) và theo ngành i (cộng theo chức năng).
-  # Sai số làm tròn (cỡ 1e-15) được đưa về 0 để các tổng bằng 0 về mặt lý thuyết
-  # (Reallocation theo ngành / tổng) không hiển thị thành số rất nhỏ gây hiểu nhầm.
-  lv  <- c(dec$FDVA0, dec$FDVA1)
-  tol <- 1e-10 * max(1, abs(lv[is.finite(lv)]))
-  zap <- function(x) { x[is.finite(x) & abs(x) < tol] <- 0; x }
+  # Sai số làm tròn (cỡ 1e-16 lần độ lớn các số hạng được cộng) được đưa về 0 để
+  # các tổng bằng 0 về mặt lý thuyết (Reallocation theo ngành / tổng) không hiển
+  # thị thành số rất nhỏ gây hiểu nhầm. Ngưỡng tính RIÊNG cho từng dòng tổng hợp
+  # (1e-12 lần tổng |FDVA| của dòng đó) nên không xoá nhầm hiệu ứng thật của
+  # ngành / chức năng nhỏ bên cạnh ngành lớn.
   agg <- function(f) {
+    lvl <- f(abs(dec$FDVA0)) + f(abs(dec$FDVA1))
+    zap <- function(x) { x[is.finite(x) & abs(x) <= 1e-12 * pmax(1, lvl)] <- 0; x }
     out <- data.frame(
       delta_FDVA   = zap(f(dec$delta_FDVA)),
       reallocation = zap(f(dec$reallocation)),
@@ -438,8 +482,15 @@ load_inputs <- function() {
   VA_long <- trim_keys(read_table_any(path_VA, format_VA, sheet_VA))
   check_cols(LI_long, c(col_industry, col_func, col_year, col_LI), "LI")
   check_cols(VA_long, c(col_industry, col_year, col_VA, col_DVA),  "VA")
-  LI_long <- drop_blank_year(filter_country(LI_long, "LI"), "LI")
-  VA_long <- drop_blank_year(filter_country(VA_long, "VA"), "VA")
+  LI_long <- filter_country(drop_blank_year(LI_long, "LI"), "LI")   # bỏ dòng ghi chú trước, rồi lọc nước
+  VA_long <- filter_country(drop_blank_year(VA_long, "VA"), "VA")
+
+  # Ép các cột giá trị sang số ngay tại đây, với đúng dấu thập phân của từng file
+  dec_LI <- attr(LI_long, "dec"); if (is.null(dec_LI)) dec_LI <- "."
+  dec_VA <- attr(VA_long, "dec"); if (is.null(dec_VA)) dec_VA <- "."
+  LI_long[[col_LI]]  <- parse_numeric(LI_long[[col_LI]],  col_LI,  dec_LI)
+  VA_long[[col_VA]]  <- parse_numeric(VA_long[[col_VA]],  col_VA,  dec_VA)
+  VA_long[[col_DVA]] <- parse_numeric(VA_long[[col_DVA]], col_DVA, dec_VA)
 
   LI0 <- long_to_matrix(filter_year(LI_long, year0, "LI"), col_industry, col_func, col_LI)
   LI1 <- long_to_matrix(filter_year(LI_long, year1, "LI"), col_industry, col_func, col_LI)

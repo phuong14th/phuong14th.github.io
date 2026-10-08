@@ -118,8 +118,8 @@ parse_numeric <- function(x, what, dec = ".") {
     num <- x
   } else {
     s <- trimws(as.character(x))
-    if (dec == ",") {
-      has_dot <- !is.na(s) & grepl(".", s, fixed = TRUE)
+    if (dec == ",") {                           # giá trị dạng số nhưng có dấu chấm -> nghi là dấu ngăn cách hàng nghìn
+      has_dot <- !is.na(s) & grepl("^[-+]?[0-9.]+(,[0-9]+)?$", s) & grepl(".", s, fixed = TRUE)
       if (any(has_dot))
         stop("Cột '", what, "' có giá trị chứa dấu chấm (ví dụ: ",
              paste(sprintf("'%s'", head(unique(s[has_dot]), 3)), collapse = ", "),
@@ -130,10 +130,14 @@ parse_numeric <- function(x, what, dec = ".") {
     num <- suppressWarnings(as.numeric(s))
   }
   bad <- is.na(num)
-  if (any(bad))
+  if (any(bad)) {
+    ex <- head(unique(as.character(x[bad])), 3)
+    hint <- if (dec == "." && any(grepl("^[-+]?[0-9]+,[0-9]+$", ex)))
+      " Nếu file dùng dấu phẩy làm dấu THẬP PHÂN (ví dụ 5,5), đặt csv_dec = \",\" ở MỤC 1." else ""
     stop("Cột '", what, "' có ", sum(bad), " giá trị trống hoặc không phải số, ví dụ: ",
-         paste(sprintf("'%s'", head(unique(as.character(x[bad])), 3)), collapse = ", "),
-         ". Hãy bỏ dấu phẩy ngăn cách hàng nghìn / ký hiệu n.a. / ô trống rồi chạy lại.")
+         paste(sprintf("'%s'", ex), collapse = ", "),
+         ". Hãy bỏ dấu ngăn cách hàng nghìn / ký hiệu n.a. / ô trống rồi chạy lại.", hint)
+  }
   num
 }
 
@@ -173,7 +177,8 @@ read_table_any <- function(path, format = "", sheet = 1) {
     dec <- if (nzchar(csv_dec)) csv_dec else if (sep == ";") "," else "."
     if (sep != ",")
       message("CSV phân cách bằng '", if (sep == "\t") "tab" else sep, "', dấu thập phân '", dec, "': ", path)
-    nf  <- count.fields(textConnection(raw), sep = sep, quote = "\"", blank.lines.skip = FALSE)
+    nf  <- count.fields(textConnection(raw), sep = sep, quote = "\"", comment.char = "",
+                        blank.lines.skip = FALSE)
     bad <- which(nf != nf[1])                   # mọi dòng phải có đúng số cột như dòng tiêu đề
     if (length(bad) > 0)
       stop("Dòng ", paste(head(keep[bad], 5), collapse = ", "), " của file ", path, " có ",
@@ -360,20 +365,30 @@ sda_fdva <- function(sh0, sh1, c0, c1, DVA0, DVA1) {
             length(c0) == nrow(sh0), length(c1) == nrow(sh0),
             length(DVA0) == nrow(sh0), length(DVA1) == nrow(sh0))
 
-  # Nếu có tên ngành / chức năng thì sắp xếp mọi đầu vào theo thứ tự của sh0
-  # (tránh nhân nhầm ngành khi gọi trực tiếp với vector sắp xếp khác thứ tự)
+  # Nếu có tên ngành / chức năng thì sắp xếp các đầu vào CÓ TÊN theo thứ tự của sh0
+  # (tránh nhân nhầm ngành khi gọi trực tiếp với vector sắp xếp khác thứ tự);
+  # đầu vào không có tên được coi là đã đúng thứ tự hàng của sh0.
   ind <- rownames(sh0); fun <- colnames(sh0)
+  if (!is.null(ind) && anyDuplicated(ind) > 0) stop("Tên hàng (ngành) của sh0 bị trùng")
+  if (!is.null(fun) && anyDuplicated(fun) > 0) stop("Tên cột (chức năng) của sh0 bị trùng")
   by_name <- function(v, nm) {
-    if (is.null(ind) || is.null(names(v))) return(v)
+    if (is.null(ind)) return(v)
+    if (is.null(names(v))) {
+      message("Lưu ý: ", nm, " không có tên ngành – coi như cùng thứ tự hàng với sh0")
+      return(v)
+    }
     if (!setequal(names(v), ind)) stop("Tên ngành của ", nm, " không khớp với tên hàng của sh0")
     v[ind]
   }
   c0 <- by_name(c0, "c0");     c1 <- by_name(c1, "c1")
   DVA0 <- by_name(DVA0, "DVA0"); DVA1 <- by_name(DVA1, "DVA1")
   if (!is.null(ind) && !is.null(rownames(sh1))) {
-    if (!setequal(rownames(sh1), ind) || !setequal(colnames(sh1), fun))
-      stop("Tên hàng / cột của sh1 không khớp với sh0")
-    sh1 <- sh1[ind, fun, drop = FALSE]
+    if (!setequal(rownames(sh1), ind)) stop("Tên hàng (ngành) của sh1 không khớp với sh0")
+    sh1 <- sh1[ind, , drop = FALSE]
+  }
+  if (!is.null(fun) && !is.null(colnames(sh1))) {
+    if (!setequal(colnames(sh1), fun)) stop("Tên cột (chức năng) của sh1 không khớp với sh0")
+    sh1 <- sh1[, fun, drop = FALSE]
   }
 
   d_sh  <- sh1  - sh0          # Δsh_ik
@@ -576,7 +591,8 @@ if (write_output) {
 #   thành ma trận rồi gọi run_sda(), ví dụ:
 #     LI0 <- as.matrix(read.csv("LI_2010.csv", row.names = 1, check.names = FALSE))
 # - Nếu đã có sẵn sh_ik và c_i (không có LI/VA), gọi trực tiếp
-#   sda_fdva(sh0, sh1, c0, c1, DVA0, DVA1).
+#   sda_fdva(sh0, sh1, c0, c1, DVA0, DVA1); nên đặt tên ngành (rownames / names)
+#   cho mọi đầu vào để hàm tự sắp xếp đúng thứ tự.
 # - Tổng 3 hiệu ứng luôn bằng ΔFDVA_ik (trung bình 2 phân rã polar), không có
 #   phần dư (interaction term). Reallocation cộng theo chức năng k = 0 cho từng
 #   ngành (xem lưu ý ở đầu file).

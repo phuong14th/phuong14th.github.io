@@ -29,9 +29,10 @@
 #
 #  Lưu ý diễn giải: vì sum_k sh_ik = 1 ở cả hai kỳ nên sum_k Δsh_ik = 0, do đó
 #  Reallocation effect cộng theo k LUÔN BẰNG 0 cho từng ngành i (và cho toàn
-#  nền kinh tế). Hiệu ứng này chỉ phân bổ lại FDVA giữa các chức năng trong
-#  cùng một ngành, nên chỉ nhìn thấy ở mức (i, k) và khi tổng hợp theo chức
-#  năng k; ở mức ngành i / tổng, ΔFDVA = Intensity + Scale.
+#  nền kinh tế; ngoại lệ duy nhất là quy ước cho ngành có tổng LI = 0 ở một
+#  kỳ, xem GHI CHÚ cuối file). Hiệu ứng này chỉ phân bổ lại FDVA giữa các chức
+#  năng trong cùng một ngành, nên chỉ nhìn thấy ở mức (i, k) và khi tổng hợp
+#  theo chức năng k; ở mức ngành i / tổng, ΔFDVA = Intensity + Scale.
 #
 #  Cách dùng:
 #     1. Điền đường dẫn / link dữ liệu và 2 năm ở MỤC 1 (đang để trống – xem TODO).
@@ -49,6 +50,12 @@
 
 options(stringsAsFactors = FALSE)
 
+# Tên ngành / chức năng có dấu tiếng Việt cần phiên R dùng UTF-8 (R >= 4.2 mặc định là UTF-8)
+if (!isTRUE(l10n_info()[["UTF-8"]]))
+  message("Lưu ý: phiên R hiện không dùng UTF-8 (", Sys.getlocale("LC_CTYPE"),
+          ") nên chữ có dấu có thể hiển thị / ghi file sai. Nên dùng R >= 4.2 hoặc ",
+          "Sys.setlocale(\"LC_ALL\", \"en_US.UTF-8\") trước khi chạy.")
+
 
 # -----------------------------------------------------------------------------
 # MỤC 1. IMPORT DỮ LIỆU  ====>  TODO: ĐIỀN LINK / ĐƯỜNG DẪN DỮ LIỆU TẠI ĐÂY <====
@@ -56,6 +63,7 @@ options(stringsAsFactors = FALSE)
 # Để trống ("") cả hai thì script dùng dữ liệu mẫu (MỤC 5) để chạy thử.
 # Chấp nhận: đường dẫn file local hoặc URL (http/https); đuôi .csv / .xlsx / .xls
 # (Google Sheets: dùng link .../export?format=csv và đặt format_* = "csv" bên dưới)
+# File CSV phải là UTF-8 (trong Excel: Save As -> "CSV UTF-8 (Comma delimited)").
 
 path_LI <- ""   # TODO: file labor income LI_ik theo năm
                 #       Dạng dài (long), các cột: industry | func | year | LI
@@ -124,18 +132,37 @@ read_table_any <- function(path, format = "", sheet = 1) {
   }
 
   if (ext == "csv") {
+    # Đọc thô từng dòng rồi mới phân tích, để file không phải UTF-8 hoặc dòng lỗi
+    # bị BÁO LỖI thay vì lặng lẽ bị cắt bớt (read.csv chỉ cảnh báo chung chung).
+    raw <- readLines(path, warn = FALSE)
+    if (length(raw) == 0) stop("File rỗng hoặc không đọc được: ", path)
+    if (!all(validUTF8(raw)))                   # kiểm tra trước mọi xử lý chuỗi khác
+      stop("File không phải UTF-8 (có thể là ANSI / Windows-1258): ", path,
+           ". Mở bằng Excel -> Save As -> 'CSV UTF-8 (Comma delimited)' rồi chạy lại.")
+    b <- charToRaw(raw[1])                      # bỏ BOM (Excel 'CSV UTF-8' thêm 3 byte đầu file)
+    if (length(b) >= 3 && identical(b[1:3], as.raw(c(0xef, 0xbb, 0xbf)))) raw[1] <- rawToChar(b[-(1:3)])
+    raw <- raw[nzchar(trimws(raw))]             # bỏ dòng trống
+    if (length(raw) < 2) stop("File chỉ có dòng tiêu đề, không có dòng dữ liệu: ", path)
+    odd_q <- which(lengths(regmatches(raw, gregexpr('"', raw, fixed = TRUE))) %% 2 == 1)
+    if (length(odd_q) > 0)                      # dấu " không đóng sẽ nuốt các dòng sau vào 1 ô
+      stop("Dấu ngoặc kép (\") không đóng ở dòng ", paste(head(odd_q, 5), collapse = ", "),
+           " của file ", path)
     sep <- csv_sep
     if (!nzchar(sep)) {                         # tự phát hiện dấu phân cách từ dòng tiêu đề
-      first <- readLines(path, n = 1, warn = FALSE, encoding = "UTF-8")
-      sep <- if (grepl(";", first) && !grepl(",", first)) ";"
-             else if (grepl("\t", first) && !grepl(",", first)) "\t"
+      first <- raw[1]
+      sep <- if (grepl(";", first, fixed = TRUE) && !grepl(",", first, fixed = TRUE)) ";"
+             else if (grepl("\t", first, fixed = TRUE) && !grepl(",", first, fixed = TRUE)) "\t"
              else ","
     }
     dec <- if (nzchar(csv_dec)) csv_dec else if (sep == ";") "," else "."
     if (sep != ",")
       message("CSV phân cách bằng '", if (sep == "\t") "tab" else sep, "', dấu thập phân '", dec, "': ", path)
-    return(read.csv(path, sep = sep, dec = dec, check.names = FALSE,
-                    fileEncoding = "UTF-8-BOM", strip.white = TRUE))
+    df <- read.csv(text = raw, sep = sep, dec = dec, check.names = FALSE, strip.white = TRUE,
+                   encoding = "UTF-8", na.strings = "")   # chỉ ô trống là NA; mã "NA" vẫn là chuỗi "NA"
+    if (nrow(df) != length(raw) - 1)
+      stop("Chỉ đọc được ", nrow(df), "/", length(raw) - 1, " dòng dữ liệu từ ", path,
+           " – kiểm tra dấu ngoặc kép (\") không đóng hoặc dòng bị lỗi.")
+    return(df)
   }
 
   if (ext %in% c("xlsx", "xls")) {
@@ -151,6 +178,36 @@ read_table_any <- function(path, format = "", sheet = 1) {
 
   stop("Không nhận dạng được định dạng file: ", path,
        " (chỉ hỗ trợ csv/xlsx/xls; có thể đặt format_* = \"csv\" hoặc \"xlsx\" ở MỤC 1)")
+}
+
+# Bỏ khoảng trắng thừa ở các cột mã (ngành, chức năng, quốc gia): "A " -> "A"
+trim_keys <- function(df) {
+  for (cc in intersect(c(col_industry, col_func, col_country), names(df)))
+    df[[cc]] <- trimws(as.character(df[[cc]]))
+  df
+}
+
+# Báo lỗi nếu cột mã có ô trống (dòng đó sẽ bị mất lặng lẽ nếu không kiểm tra)
+check_keys <- function(df, cols) {
+  for (v in cols)
+    if (anyNA(df[[v]]) || any(!nzchar(df[[v]])))
+      stop("Cột '", v, "' có ", sum(is.na(df[[v]]) | !nzchar(df[[v]])),
+           " ô trống – mỗi dòng phải có mã ngành / chức năng")
+  invisible(TRUE)
+}
+
+# Bỏ các dòng không có năm (dòng ghi chú / nguồn ở cuối file Excel) và in ra để kiểm tra
+drop_blank_year <- function(df, what = "") {
+  check_cols(df, col_year, what)
+  blank <- is.na(df[[col_year]]) | !nzchar(trimws(as.character(df[[col_year]])))
+  if (any(blank)) {
+    shown <- apply(df[blank, , drop = FALSE], 1, function(r) paste(r[!is.na(r)], collapse = " "))
+    message("Bỏ qua ", sum(blank), " dòng không có năm trong file ", what, ": ",
+            paste(sprintf("'%s'", head(shown, 3)), collapse = ", "),
+            if (sum(blank) > 3) ", ..." else "")
+    df <- df[!blank, , drop = FALSE]
+  }
+  df
 }
 
 # Lọc đúng năm (so sánh dưới dạng chuỗi nên 2010 và "2010" đều được)
@@ -185,6 +242,7 @@ filter_country <- function(df, what = "") {
 # - Tổ hợp (ngành, chức năng) không có trong dữ liệu được gán 0 và được in ra để kiểm tra.
 long_to_matrix <- function(df, row, col, value) {
   check_cols(df, c(row, col, value))
+  check_keys(df, c(row, col))
   if (anyDuplicated(df[c(row, col)]) > 0)
     stop("Có nhiều hơn 1 dòng cho cùng cặp (", row, ", ", col, ") trong một năm. ",
          "Nếu file có nhiều quốc gia, điền col_country / country ở MỤC 1; ",
@@ -207,6 +265,7 @@ long_to_matrix <- function(df, row, col, value) {
 # Chuyển bảng dạng dài -> vector có tên (tên = `name`, giá trị = `value`)
 long_to_vector <- function(df, name, value) {
   check_cols(df, c(name, value))
+  check_keys(df, name)
   if (anyDuplicated(df[[name]]) > 0)
     stop("Cột '", name, "' bị trùng trong cùng một năm – mỗi ngành chỉ được 1 dòng/năm ",
          "(nếu file có nhiều quốc gia, điền col_country / country ở MỤC 1)")
@@ -236,8 +295,10 @@ compute_sh <- function(LI) {
 # c_i = sum_k LI_ik / VA_i   (vector theo ngành)
 compute_c <- function(LI, VA) {
   stopifnot(length(VA) == nrow(LI))
-  if (any(is.na(VA) | VA == 0))
-    warning("Có ngành với VA = 0 hoặc NA; c_i của ngành đó sẽ là NA/Inf")
+  bad <- is.na(VA) | VA == 0
+  if (any(bad))
+    stop("VA = 0 hoặc NA ở ngành: ", paste(names(VA)[bad], collapse = ", "),
+         " – c_i = sum_k LI_ik / VA_i không xác định. Hãy loại bỏ hoặc gộp ngành này trước khi chạy.")
   rowSums(LI) / VA
 }
 
@@ -253,7 +314,7 @@ align_inputs <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
   chk <- function(x, ref, what) {
     if (is.null(x) || !setequal(x, ref))
       stop("Tập ", what, " không khớp giữa các đầu vào. Chỉ có ở một bên: ",
-           paste(c(setdiff(x, ref), setdiff(ref, x)), collapse = ", "))
+           paste(sprintf("'%s'", c(setdiff(x, ref), setdiff(ref, x))), collapse = ", "))
   }
   chk(rownames(LI1), ind, "ngành (LI0 vs LI1)")
   chk(colnames(LI1), fun, "chức năng (LI0 vs LI1)")
@@ -291,11 +352,13 @@ sda_fdva <- function(sh0, sh1, c0, c1, DVA0, DVA1) {
   FDVA1 <- row_scale(sh1, c1 * DVA1)
   delta <- FDVA1 - FDVA0
 
-  # Kiểm tra: tổng 3 hiệu ứng phải bằng ΔFDVA (sai số chỉ do làm tròn số)
+  # Kiểm tra: tổng 3 hiệu ứng phải bằng ΔFDVA (sai số chỉ do làm tròn số,
+  # cỡ 1e-16 lần MỨC FDVA, nên ngưỡng so sánh lấy theo mức FDVA)
   residual <- delta - (reallocation + intensity + scale)
-  if (anyNA(residual))
-    warning("Kết quả có NA/NaN – kiểm tra VA = 0 hoặc dữ liệu thiếu")
-  else if (max(abs(residual)) > 1e-8 * max(1, max(abs(delta))))
+  level    <- max(1, abs(c(FDVA0, FDVA1)[is.finite(c(FDVA0, FDVA1))]))
+  if (!all(is.finite(residual)))
+    warning("Kết quả có NA/NaN/Inf – kiểm tra VA = 0 hoặc dữ liệu thiếu")
+  else if (max(abs(residual)) > 1e-8 * level)
     warning("Tổng 3 hiệu ứng KHÔNG bằng ΔFDVA – kiểm tra lại dữ liệu đầu vào")
 
   list(FDVA0 = FDVA0, FDVA1 = FDVA1, delta_FDVA = delta,
@@ -335,8 +398,9 @@ run_sda <- function(LI0, LI1, VA0, VA1, DVA0, DVA1) {
   # Tổng hợp theo chức năng k (cộng theo ngành) và theo ngành i (cộng theo chức năng).
   # Sai số làm tròn (cỡ 1e-15) được đưa về 0 để các tổng bằng 0 về mặt lý thuyết
   # (Reallocation theo ngành / tổng) không hiển thị thành số rất nhỏ gây hiểu nhầm.
-  tol <- 1e-10 * max(1, max(abs(dec$delta_FDVA), na.rm = TRUE))
-  zap <- function(x) { x[!is.na(x) & abs(x) < tol] <- 0; x }
+  lv  <- c(dec$FDVA0, dec$FDVA1)
+  tol <- 1e-10 * max(1, abs(lv[is.finite(lv)]))
+  zap <- function(x) { x[is.finite(x) & abs(x) < tol] <- 0; x }
   agg <- function(f) {
     out <- data.frame(
       delta_FDVA   = zap(f(dec$delta_FDVA)),
@@ -370,12 +434,12 @@ load_inputs <- function() {
   if (!nzchar(path_LI) || !nzchar(path_VA)) stop("Phải điền cả path_LI và path_VA ở MỤC 1")
   if (is.na(year0) || is.na(year1))         stop("Chưa điền year0 / year1 ở MỤC 1")
 
-  LI_long <- read_table_any(path_LI, format_LI, sheet_LI)
-  VA_long <- read_table_any(path_VA, format_VA, sheet_VA)
+  LI_long <- trim_keys(read_table_any(path_LI, format_LI, sheet_LI))
+  VA_long <- trim_keys(read_table_any(path_VA, format_VA, sheet_VA))
   check_cols(LI_long, c(col_industry, col_func, col_year, col_LI), "LI")
   check_cols(VA_long, c(col_industry, col_year, col_VA, col_DVA),  "VA")
-  LI_long <- filter_country(LI_long, "LI")
-  VA_long <- filter_country(VA_long, "VA")
+  LI_long <- drop_blank_year(filter_country(LI_long, "LI"), "LI")
+  VA_long <- drop_blank_year(filter_country(VA_long, "VA"), "VA")
 
   LI0 <- long_to_matrix(filter_year(LI_long, year0, "LI"), col_industry, col_func, col_LI)
   LI1 <- long_to_matrix(filter_year(LI_long, year1, "LI"), col_industry, col_func, col_LI)
@@ -426,8 +490,10 @@ if (nzchar(path_LI) || nzchar(path_VA)) {
 
 res <- with(inputs, run_sda(LI0, LI1, VA0, VA1, DVA0, DVA1))
 
+resid <- res$matrices$residual
 cat("\n===== Kiểm tra: max |ΔFDVA - (reallocation + intensity + scale)| =",
-    format(max(abs(res$matrices$residual), na.rm = TRUE), digits = 3), "=====\n")
+    if (all(is.finite(resid))) format(max(abs(resid)), digits = 3) else "NA (kết quả có NA/Inf)",
+    "=====\n")
 
 cat("\n----- Tổng toàn nền kinh tế (Reallocation = 0 theo lý thuyết) -----\n"); print(res$total)
 cat("\n----- Theo chức năng k -----\n");                                         print(res$by_function)
@@ -465,5 +531,7 @@ if (write_output) {
 #   ngành (xem lưu ý ở đầu file).
 # - Ngành có tổng LI = 0 ở một kỳ: sh_ik kỳ đó được quy ước = 0 (công thức
 #   không xác định 0/0); FDVA kỳ đó = 0 và cách chia 3 hiệu ứng cho ngành đó
-#   chỉ mang tính quy ước.
+#   chỉ mang tính quy ước (Reallocation của ngành đó không còn cộng về 0).
+# - Ngành có VA = 0: c_i không xác định nên script dừng; hãy loại bỏ hoặc gộp
+#   ngành đó trước khi chạy.
 # -----------------------------------------------------------------------------
